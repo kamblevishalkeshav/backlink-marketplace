@@ -52,6 +52,36 @@ const nextConfig = {
   excludeDefaultMomentLocales: true,
   // Clear the cached build output directory before starting a new build
   cleanDistDir: true,
+  // Add redirects for the parentheses routes
+  async redirects() {
+    return [
+      {
+        source: '/(dashboard)',
+        destination: '/dashboard',
+        permanent: true,
+      },
+      {
+        source: '/(admin)',
+        destination: '/admin',
+        permanent: true,
+      },
+      {
+        source: '/(auth)',
+        destination: '/auth',
+        permanent: true,
+      },
+      {
+        source: '/(publisher)',
+        destination: '/publisher',
+        permanent: true,
+      },
+      {
+        source: '/(public)',
+        destination: '/public',
+        permanent: true,
+      }
+    ]
+  }
 };
 
 export default nextConfig; 
