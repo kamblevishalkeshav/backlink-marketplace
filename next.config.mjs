@@ -37,12 +37,21 @@ const nextConfig = {
   experimental: {
     optimizePackageImports: ['lucide-react'],
     serverComponentsExternalPackages: ['@prisma/client', 'bcrypt'],
-    outputFileTracingIgnores: ['**/node_modules/@swc/core-linux-x64-gnu', '**/node_modules/@swc/core-linux-x64-musl'],
+    outputFileTracingIgnores: [
+      '**/node_modules/@swc/core-linux-x64-gnu', 
+      '**/node_modules/@swc/core-linux-x64-musl',
+      // Explicitly ignore route groups with parentheses
+      '**/src/app/(**)/**',
+    ],
   },
   // Set top level "pageExtensions" to process only specific file types
   pageExtensions: ['js', 'jsx', 'ts', 'tsx'],
   // Handle the minification issues
   swcMinify: false,
+  // Exclude problematic routes from build
+  excludeDefaultMomentLocales: true,
+  // Clear the cached build output directory before starting a new build
+  cleanDistDir: true,
 };
 
 export default nextConfig; 

@@ -1,0 +1,12 @@
+# Ignore all route groups with parentheses
+src/app/(*)
+
+# Specific problematic routes
+src/app/(dashboard)
+src/app/(admin)
+src/app/(auth)
+src/app/(publisher)
+src/app/(public)
+
+# Docs folder
+docs/ 
