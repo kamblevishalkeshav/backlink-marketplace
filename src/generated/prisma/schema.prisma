@@ -1,0 +1,94 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider        = "prisma-client-js"
+  output          = "../src/generated/prisma"
+  previewFeatures = ["driverAdapters"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// Define your models below
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String?
+  role      Role     @default(USER)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  pages     Page[]
+}
+
+enum Role {
+  USER
+  ADMIN
+}
+
+model Profile {
+  id        String   @id @default(cuid())
+  userId    String   @unique
+  bio       String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// Website Content Models
+model Page {
+  id          String        @id @default(cuid())
+  title       String
+  slug        String        @unique
+  isPublished Boolean       @default(false)
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  sections    PageSection[]
+  createdBy   User?         @relation(fields: [createdById], references: [id])
+  createdById String?
+}
+
+model PageSection {
+  id        String      @id @default(cuid())
+  name      String
+  type      SectionType
+  order     Int
+  content   Json
+  page      Page        @relation(fields: [pageId], references: [id], onDelete: Cascade)
+  pageId    String
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
+}
+
+enum SectionType {
+  HERO
+  FEATURES
+  LOGO_CAROUSEL
+  MEDIA_BACKLINKS
+  HOW_IT_WORKS
+  ANALYTICS_DASHBOARD
+  TESTIMONIALS
+  FAQ
+  CTA
+  CUSTOM
+}
+
+model Asset {
+  id        String    @id @default(cuid())
+  name      String
+  url       String
+  type      AssetType
+  size      Int
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+}
+
+enum AssetType {
+  IMAGE
+  VIDEO
+  DOCUMENT
+}
