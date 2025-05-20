@@ -1,5 +1,6 @@
-import { prisma } from '@/lib/prisma'
+import prisma from '@/lib/prisma'
 import { PageSection } from '@/types/content'
+import { PrismaClient } from '@prisma/client'
 import { NextRequest, NextResponse } from 'next/server'
 
 // GET all pages
@@ -53,7 +54,7 @@ export async function POST(request: NextRequest) {
     }
     
     // Create the page and its sections in a transaction
-    const page = await prisma.$transaction(async (prismaClient) => {
+    const page = await prisma.$transaction(async (prismaClient: PrismaClient) => {
       // Create the page
       const newPage = await prismaClient.page.create({
         data: {
@@ -129,7 +130,7 @@ export async function PUT(request: NextRequest) {
     }
     
     // Update the page and its sections in a transaction
-    const updatedPage = await prisma.$transaction(async (prismaClient) => {
+    const updatedPage = await prisma.$transaction(async (prismaClient: PrismaClient) => {
       // Update the page
       await prismaClient.page.update({
         where: { id },
