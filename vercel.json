@@ -2,11 +2,5 @@
   "buildCommand": "npm run build",
   "devCommand": "npm run dev",
   "installCommand": "npm install",
-  "framework": "nextjs",
-  "environmentVariables": {
-    "DATABASE_URL": {
-      "type": "string",
-      "value": "prisma+postgres://accelerate.prisma-data.net/?api_key=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhcGlfa2V5IjoiMmUxMTVhMGItMzFhNi00NzdhLWI1NmItMjlhOWQzZGVkYjBhIiwidGVuYW50X2lkIjoiYzI1Njk4NDQ2MTg5MzgwMjFkYTMzM2M4ZjdiNjdjMzhkNzYyOGJlZjlmOTMyZTRmNTA2ODY1OTljMGQyMDc1ZCIsImludGVybmFsX3NlY3JldCI6ImFmYWZjOTAyLTk5OTItNGEyYS04ZTk0LTBkMjg5ZTRlNjYyNyJ9.1HNvpBMUbeSkmoCkITp1d-wYuF055B3CBCemyDQ56ro"
-    }
-  }
+  "framework": "nextjs"
 } 
