@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "next dev --turbopack",
     "build": "node build.js",
-    "vercel-build": "node deploy.js && next build",
+    "vercel-build": "node vercel-build.js",
     "start": "next start",
     "lint": "next lint",
     "postinstall": "npx prisma generate",

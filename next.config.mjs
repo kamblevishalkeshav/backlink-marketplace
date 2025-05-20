@@ -33,6 +33,16 @@ const nextConfig = {
     }
     return config;
   },
+  // More specific settings to fix route group issues
+  experimental: {
+    optimizePackageImports: ['lucide-react'],
+    serverComponentsExternalPackages: ['@prisma/client', 'bcrypt'],
+    outputFileTracingIgnores: ['**/node_modules/@swc/core-linux-x64-gnu', '**/node_modules/@swc/core-linux-x64-musl'],
+  },
+  // Set top level "pageExtensions" to process only specific file types
+  pageExtensions: ['js', 'jsx', 'ts', 'tsx'],
+  // Handle the minification issues
+  swcMinify: false,
 };
 
 export default nextConfig; 
