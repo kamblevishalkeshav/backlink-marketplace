@@ -236,6 +236,7 @@ const config = {
     "db"
   ],
   "activeProvider": "postgresql",
+  "postinstall": false,
   "inlineDatasources": {
     "db": {
       "url": {
@@ -246,7 +247,7 @@ const config = {
   },
   "inlineSchema": "// This is your Prisma schema file,\n// learn more about it in the docs: https://pris.ly/d/prisma-schema\n\n// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?\n// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init\n\ngenerator client {\n  provider        = \"prisma-client-js\"\n  output          = \"../src/generated/prisma\"\n  previewFeatures = [\"driverAdapters\"]\n}\n\ndatasource db {\n  provider = \"postgresql\"\n  url      = env(\"DATABASE_URL\")\n}\n\n// Define your models below\nmodel User {\n  id        String   @id @default(cuid())\n  email     String   @unique\n  name      String?\n  role      Role     @default(USER)\n  createdAt DateTime @default(now())\n  updatedAt DateTime @updatedAt\n  pages     Page[]\n}\n\nenum Role {\n  USER\n  ADMIN\n}\n\nmodel Profile {\n  id        String   @id @default(cuid())\n  userId    String   @unique\n  bio       String?\n  createdAt DateTime @default(now())\n  updatedAt DateTime @updatedAt\n}\n\n// Website Content Models\nmodel Page {\n  id          String        @id @default(cuid())\n  title       String\n  slug        String        @unique\n  isPublished Boolean       @default(false)\n  createdAt   DateTime      @default(now())\n  updatedAt   DateTime      @updatedAt\n  sections    PageSection[]\n  createdBy   User?         @relation(fields: [createdById], references: [id])\n  createdById String?\n}\n\nmodel PageSection {\n  id        String      @id @default(cuid())\n  name      String\n  type      SectionType\n  order     Int\n  content   Json\n  page      Page        @relation(fields: [pageId], references: [id], onDelete: Cascade)\n  pageId    String\n  createdAt DateTime    @default(now())\n  updatedAt DateTime    @updatedAt\n}\n\nenum SectionType {\n  HERO\n  FEATURES\n  LOGO_CAROUSEL\n  MEDIA_BACKLINKS\n  HOW_IT_WORKS\n  ANALYTICS_DASHBOARD\n  TESTIMONIALS\n  FAQ\n  CTA\n  CUSTOM\n}\n\nmodel Asset {\n  id        String    @id @default(cuid())\n  name      String\n  url       String\n  type      AssetType\n  size      Int\n  createdAt DateTime  @default(now())\n  updatedAt DateTime  @updatedAt\n}\n\nenum AssetType {\n  IMAGE\n  VIDEO\n  DOCUMENT\n}\n",
   "inlineSchemaHash": "b0d6aead08bffb646244b8c864a1efd37f8ec6ac65f411b315137fcadeade11a",
-  "copyEngine": false
+  "copyEngine": true
 }
 config.dirname = '/'
 
