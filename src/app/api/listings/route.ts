@@ -205,7 +205,7 @@ export async function POST(request: NextRequest) {
     }
     
     // Log incoming data for debugging
-    console.log('Received data:', JSON.stringify(data));
+    console.log('Received data:', JSON.stringify(data, null, 2));
     
     // Validate required fields
     if (!data.website?.domain) {
@@ -217,6 +217,13 @@ export async function POST(request: NextRequest) {
     }
     
     try {
+      // Define interface for CountryTraffic items
+      interface CountryTrafficItem {
+        countryCode: string;
+        percentage: string | number;
+        traffic?: string | number;
+      }
+      
       // Create the listing from the nested data structure
       console.log('Attempting to create listing in database for domain:', data.website.domain);
       const listing = await prisma.listing.create({
@@ -266,11 +273,11 @@ export async function POST(request: NextRequest) {
           countryTraffic: {
             create: Array.isArray(data.metrics.countryTraffic) && data.metrics.countryTraffic.length > 0
               ? data.metrics.countryTraffic
-                  .filter((item: any) => item.countryCode && item.percentage)
-                  .map((item: any) => ({
+                  .filter((item: CountryTrafficItem) => item.countryCode && item.percentage)
+                  .map((item: CountryTrafficItem) => ({
                     countryCode: item.countryCode,
-                    percentage: parseInt(item.percentage) || 0,
-                    traffic: parseInt(item.traffic) || 0,
+                    percentage: parseInt(String(item.percentage)) || 0,
+                    traffic: parseInt(String(item.traffic)) || 0,
                   }))
               : []
           }
@@ -279,20 +286,24 @@ export async function POST(request: NextRequest) {
       
       console.log('Listing created successfully:', listing.id);
       return NextResponse.json(listing);
-    } catch (dbError: any) {
+    } catch (dbError: unknown) {
       console.error('Database error:', dbError);
       // Check for specific database errors
-      if (dbError.code === 'P2002') {
-        return NextResponse.json(
-          { error: 'A listing with this domain already exists' },
-          { status: 409 }
-        );
-      }
-      if (dbError.code === 'P2003') {
-        return NextResponse.json(
-          { error: 'Foreign key constraint failed: ' + dbError.meta?.field_name },
-          { status: 400 }
-        );
+      if (typeof dbError === 'object' && dbError !== null && 'code' in dbError) {
+        const prismaError = dbError as { code: string; meta?: { field_name?: string } };
+        
+        if (prismaError.code === 'P2002') {
+          return NextResponse.json(
+            { error: 'A listing with this domain already exists' },
+            { status: 409 }
+          );
+        }
+        if (prismaError.code === 'P2003') {
+          return NextResponse.json(
+            { error: 'Foreign key constraint failed: ' + prismaError.meta?.field_name },
+            { status: 400 }
+          );
+        }
       }
       throw dbError; // Re-throw to be caught by the outer catch
     }
@@ -333,34 +344,69 @@ export async function PUT(request: Request) {
       );
     }
     
+    // Define interface for CSV import data
+    interface ListingImportData {
+      domain: string;
+      price: string | number;
+      offer_rate?: string | number;
+      listing_type: string;
+      is_permanent: string;
+      months?: string | number;
+      word_count?: string | number;
+      working_days?: string | number;
+      content_writer?: string;
+      primary_language: string;
+      native_language: string;
+      extra_language?: string;
+      category?: string;
+      country_code?: string;
+      da?: string | number;
+      dr_value?: string | number;
+      dr_percentage?: string;
+      as_value?: string | number;
+      traffic?: string | number;
+      keywords?: string | number;
+      ref_domains?: string | number;
+      niches?: string;
+      publisher_note?: string;
+      accept_casino?: string;
+      accept_finance?: string;
+      accept_erotic?: string;
+      accept_dating?: string;
+      accept_crypto?: string;
+      accept_cbd?: string;
+      accept_medicine?: string;
+      [key: string]: unknown;  // For dynamic country traffic fields
+    }
+    
     // Process each listing
     const results = await Promise.all(
-      listings.map(async (listingData) => {
+      listings.map(async (listingData: ListingImportData) => {
         try {
           const listing = await prisma.listing.create({
             data: {
               domain: listingData.domain,
-              price: parseFloat(listingData.price) || 0,
-              offerRate: listingData.offer_rate ? parseFloat(listingData.offer_rate) : null,
+              price: parseFloat(String(listingData.price)) || 0,
+              offerRate: listingData.offer_rate ? parseFloat(String(listingData.offer_rate)) : null,
               tags: [],
               listingType: mapListingType(listingData.listing_type),
               permanent: listingData.is_permanent === 'TRUE',
-              months: listingData.is_permanent === 'TRUE' ? null : parseInt(listingData.months) || null,
-              wordCount: parseInt(listingData.word_count) || 0,
-              workingDays: parseInt(listingData.working_days) || 1,
-              contentWriter: mapContentWriter(listingData.content_writer),
+              months: listingData.is_permanent === 'TRUE' ? null : parseInt(String(listingData.months)) || null,
+              wordCount: parseInt(String(listingData.word_count)) || 0,
+              workingDays: parseInt(String(listingData.working_days)) || 1,
+              contentWriter: mapContentWriter(listingData.content_writer || 'both'),
               primaryLanguage: listingData.primary_language,
               nativeLanguage: listingData.native_language,
               extraLanguage: listingData.extra_language || null,
               category: listingData.category,
               countryCode: listingData.country_code,
-              da: parseInt(listingData.da) || 0,
-              drValue: parseInt(listingData.dr_value) || 0,
+              da: parseInt(String(listingData.da)) || 0,
+              drValue: parseInt(String(listingData.dr_value)) || 0,
               drPercentage: listingData.dr_percentage || '',
-              as: parseInt(listingData.as_value) || 0,
-              traffic: parseInt(listingData.traffic) || 0,
-              keywords: parseInt(listingData.keywords) || 0,
-              refDomains: parseInt(listingData.ref_domains) || 0,
+              as: parseInt(String(listingData.as_value)) || 0,
+              traffic: parseInt(String(listingData.traffic)) || 0,
+              keywords: parseInt(String(listingData.keywords)) || 0,
+              refDomains: parseInt(String(listingData.ref_domains)) || 0,
               niches: listingData.niches ? listingData.niches.split(',').map((n: string) => n.trim()) : [],
               publisherNote: listingData.publisher_note || null,
               status: 'PENDING',
@@ -396,7 +442,7 @@ export async function PUT(request: Request) {
           return {
             success: false,
             domain: listingData.domain,
-            error: (error as Error).message
+            error: error instanceof Error ? error.message : String(error)
           };
         }
       })
@@ -420,7 +466,7 @@ export async function PUT(request: Request) {
 
 // Helper functions
 function mapListingType(type: string): 'GUEST_POST' | 'HOMEPAGE_LINK' | 'INNERPAGE_LINK' | 'SITEWIDE_LINK' {
-  const map: Record<string, any> = {
+  const map: Record<string, 'GUEST_POST' | 'HOMEPAGE_LINK' | 'INNERPAGE_LINK' | 'SITEWIDE_LINK'> = {
     'guest-post': 'GUEST_POST',
     'homepage-link': 'HOMEPAGE_LINK',
     'innerpage-link': 'INNERPAGE_LINK',
@@ -431,7 +477,7 @@ function mapListingType(type: string): 'GUEST_POST' | 'HOMEPAGE_LINK' | 'INNERPA
 }
 
 function mapContentWriter(type: string): 'BOTH' | 'YOU' | 'PUBLISHER' {
-  const map: Record<string, any> = {
+  const map: Record<string, 'BOTH' | 'YOU' | 'PUBLISHER'> = {
     'both': 'BOTH',
     'buyer': 'YOU',
     'publisher': 'PUBLISHER',
@@ -441,7 +487,9 @@ function mapContentWriter(type: string): 'BOTH' | 'YOU' | 'PUBLISHER' {
   return map[type.toLowerCase()] || 'BOTH';
 }
 
-function mapAcceptanceStatus(value: string): 'ACCEPTED' | 'NOT_ACCEPTED' | 'PROHIBITED' {
+function mapAcceptanceStatus(value?: string): 'ACCEPTED' | 'NOT_ACCEPTED' | 'PROHIBITED' {
+  if (!value) return 'NOT_ACCEPTED';
+  
   if (value === 'TRUE' || value === 'true' || value === '1' || value === 'yes') {
     return 'ACCEPTED';
   } else if (value === 'FALSE' || value === 'false' || value === '0' || value === 'no') {
@@ -453,7 +501,7 @@ function mapAcceptanceStatus(value: string): 'ACCEPTED' | 'NOT_ACCEPTED' | 'PROH
   return 'NOT_ACCEPTED';
 }
 
-function createCountryTrafficData(listingData: any) {
+function createCountryTrafficData(listingData: Record<string, unknown>) {
   const countryData = [];
   
   // Add country data if available (from CSV import format)
@@ -464,9 +512,9 @@ function createCountryTrafficData(listingData: any) {
     
     if (countryCode && percentage) {
       countryData.push({
-        countryCode: countryCode,
-        percentage: parseInt(percentage) || 0,
-        traffic: parseInt(traffic) || 0,
+        countryCode: String(countryCode),
+        percentage: parseInt(String(percentage)) || 0,
+        traffic: parseInt(String(traffic)) || 0,
       });
     }
   }

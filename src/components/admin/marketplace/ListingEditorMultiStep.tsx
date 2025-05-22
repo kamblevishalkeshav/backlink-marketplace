@@ -1,6 +1,12 @@
 'use client';
 
 import { DEFAULT_LISTING } from '@/components/admin/marketplace/constants';
+import BasicInfoSection from '@/components/admin/marketplace/sections/BasicInfoSection';
+import ContentSection from '@/components/admin/marketplace/sections/ContentSection';
+import MetricsSection from '@/components/admin/marketplace/sections/MetricsSection';
+import NichesSection from '@/components/admin/marketplace/sections/NichesSection';
+import SubmitSection from '@/components/admin/marketplace/sections/SubmitSection';
+import TrafficSection from '@/components/admin/marketplace/sections/TrafficSection';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -11,253 +17,9 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { ChevronLeft, ChevronRight, Save } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
+import { FormProvider as RHFFormProvider, useForm } from 'react-hook-form';
 
-// Add interface for section component props
-interface SectionProps {
-  data: Omit<Listing, 'id' | 'status' | 'createdAt'>;
-  onChange: (data: Partial<Omit<Listing, 'id' | 'status' | 'createdAt'>>) => void;
-  isSubmitting: boolean;
-}
-
-// Section components
-const BasicInfoSection = ({ data, onChange, isSubmitting }: SectionProps) => (
-  <div className="space-y-4">
-    <h3 className="text-lg font-semibold">Basic Information</h3>
-    <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-      <div>
-        <label className="block text-sm font-medium mb-1">Website Domain</label>
-        <input 
-          type="text" 
-          value={data?.website?.domain || ''}
-          onChange={(e) => onChange({ website: { ...data.website, domain: e.target.value } })}
-          disabled={isSubmitting}
-          className="w-full p-2 border rounded"
-          placeholder="example.com"
-        />
-      </div>
-      <div>
-        <label className="block text-sm font-medium mb-1">Price ($)</label>
-        <input 
-          type="number" 
-          value={data?.price || ''}
-          onChange={(e) => onChange({ price: parseInt(e.target.value) })}
-          disabled={isSubmitting}
-          className="w-full p-2 border rounded"
-          placeholder="100"
-        />
-      </div>
-    </div>
-  </div>
-);
-
-const ContentSection = ({ data, onChange, isSubmitting }: SectionProps) => (
-  <div className="space-y-4">
-    <h3 className="text-lg font-semibold">Content Details</h3>
-    <div>
-      <label className="block text-sm font-medium mb-1">Description</label>
-      <textarea
-        value={data?.description || ''}
-        onChange={(e) => onChange({ description: e.target.value })}
-        disabled={isSubmitting}
-        className="w-full p-2 border rounded min-h-32"
-        placeholder="Describe this listing..."
-      />
-    </div>
-    <div>
-      <label className="block text-sm font-medium mb-1">Listing Type</label>
-      <select 
-        value={data?.type?.listingType || ''}
-        onChange={(e) => onChange({ type: { ...data.type, listingType: e.target.value } })}
-        disabled={isSubmitting}
-        className="w-full p-2 border rounded"
-      >
-        <option value="">Select type</option>
-        <option value="guest-post">Guest Post</option>
-        <option value="link-insertion">Link Insertion</option>
-      </select>
-    </div>
-  </div>
-);
-
-const MetricsSection = ({ data, onChange, isSubmitting }: SectionProps) => (
-  <div className="space-y-4">
-    <h3 className="text-lg font-semibold">Site Metrics</h3>
-    <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-      <div>
-        <label className="block text-sm font-medium mb-1">Domain Authority (DA)</label>
-        <input 
-          type="number" 
-          value={data?.metrics?.da || ''}
-          onChange={(e) => onChange({ metrics: { ...data.metrics, da: parseInt(e.target.value) } })}
-          disabled={isSubmitting}
-          className="w-full p-2 border rounded"
-          placeholder="30"
-        />
-      </div>
-      <div>
-        <label className="block text-sm font-medium mb-1">Domain Rating (DR)</label>
-        <input 
-          type="number" 
-          value={data?.metrics?.dr?.value || ''}
-          onChange={(e) => onChange({ 
-            metrics: { 
-              ...data.metrics, 
-              dr: { 
-                ...data.metrics.dr,
-                value: parseInt(e.target.value) 
-              } 
-            } 
-          })}
-          disabled={isSubmitting}
-          className="w-full p-2 border rounded"
-          placeholder="40"
-        />
-      </div>
-    </div>
-  </div>
-);
-
-const TrafficSection = ({ data, onChange, isSubmitting }: SectionProps) => (
-  <div className="space-y-4">
-    <h3 className="text-lg font-semibold">Traffic Information</h3>
-    <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-      <div>
-        <label className="block text-sm font-medium mb-1">Monthly Traffic</label>
-        <input 
-          type="number" 
-          value={data?.traffic?.monthly || ''}
-          onChange={(e) => onChange({ traffic: { ...data.traffic, monthly: parseInt(e.target.value) } })}
-          disabled={isSubmitting}
-          className="w-full p-2 border rounded"
-          placeholder="10000"
-        />
-      </div>
-      <div>
-        <label className="block text-sm font-medium mb-1">Primary Language</label>
-        <select 
-          value={data?.language?.primary || ''}
-          onChange={(e) => onChange({ language: { ...data.language, primary: e.target.value } })}
-          disabled={isSubmitting}
-          className="w-full p-2 border rounded"
-        >
-          <option value="">Select language</option>
-          <option value="en">English</option>
-          <option value="es">Spanish</option>
-          <option value="fr">French</option>
-          <option value="de">German</option>
-        </select>
-      </div>
-    </div>
-  </div>
-);
-
-const NichesSection = ({ data, onChange, isSubmitting }: SectionProps) => {
-  const [inputValue, setInputValue] = useState('');
-  
-  const handleAddNiche = () => {
-    if (inputValue && !data.niches.includes(inputValue)) {
-      const updatedNiches = [...data.niches, inputValue];
-      onChange({ niches: updatedNiches });
-      setInputValue('');
-    }
-  };
-  
-  const handleRemoveNiche = (niche: string) => {
-    const updatedNiches = data.niches.filter(n => n !== niche);
-    onChange({ niches: updatedNiches });
-  };
-  
-  const handleKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' || e.key === ',') {
-      e.preventDefault();
-      handleAddNiche();
-    }
-  };
-  
-  return (
-    <div className="space-y-4">
-      <h3 className="text-lg font-semibold">Niches & Categories</h3>
-      <div>
-        <label className="block text-sm font-medium mb-1">Add Niches (press Enter or comma to add)</label>
-        <div className="flex gap-2">
-          <input 
-            type="text" 
-            value={inputValue}
-            onChange={(e) => setInputValue(e.target.value)}
-            onKeyDown={handleKeyPress}
-            disabled={isSubmitting}
-            className="flex-1 p-2 border rounded"
-            placeholder="e.g. Technology, Marketing"
-          />
-          <Button 
-            type="button" 
-            onClick={handleAddNiche}
-            disabled={isSubmitting || !inputValue}
-            variant="outline"
-          >
-            Add
-          </Button>
-        </div>
-      </div>
-      
-      {data.niches.length > 0 && (
-        <div className="flex flex-wrap gap-2 mt-2">
-          {data.niches.map((niche) => (
-            <div key={niche} className="bg-primary/10 text-primary px-3 py-1 rounded-full flex items-center">
-              <span>{niche}</span>
-              <button 
-                type="button" 
-                onClick={() => handleRemoveNiche(niche)}
-                disabled={isSubmitting}
-                className="ml-2 text-primary hover:text-primary/80"
-              >
-                ×
-              </button>
-            </div>
-          ))}
-        </div>
-      )}
-    </div>
-  );
-};
-
-const SubmitSection = ({ data }: Omit<SectionProps, 'onChange' | 'isSubmitting'>) => (
-  <div className="space-y-4">
-    <h3 className="text-lg font-semibold">Review & Submit</h3>
-    <div className="bg-gray-50 p-4 rounded space-y-4">
-      <div>
-        <h4 className="text-md font-medium">Website</h4>
-        <p>{data?.website?.domain || 'Not specified'}</p>
-      </div>
-      <div>
-        <h4 className="text-md font-medium">Listing Type</h4>
-        <p>{data?.type?.listingType || 'Not specified'}</p>
-      </div>
-      <div>
-        <h4 className="text-md font-medium">Price</h4>
-        <p>${data?.price || '0'}</p>
-      </div>
-      <div>
-        <h4 className="text-md font-medium">Metrics</h4>
-        <p>DA: {data?.metrics?.da || 'N/A'}, DR: {data?.metrics?.dr?.value || 'N/A'}</p>
-      </div>
-      <div>
-        <h4 className="text-md font-medium">Traffic</h4>
-        <p>{data?.traffic?.monthly?.toLocaleString() || '0'} monthly visitors</p>
-      </div>
-      <div>
-        <h4 className="text-md font-medium">Language</h4>
-        <p>{data?.language?.primary || 'Not specified'}</p>
-      </div>
-      <div>
-        <h4 className="text-md font-medium">Niches</h4>
-        <p>{data?.niches?.join(', ') || 'None selected'}</p>
-      </div>
-    </div>
-  </div>
-);
-
-// Define the steps
+// Define the steps with their components
 const steps = [
   { id: 'basic-info', label: 'Basic Info', icon: '📝', component: BasicInfoSection },
   { id: 'content', label: 'Content', icon: '📄', component: ContentSection },
@@ -279,6 +41,16 @@ export default function ListingEditorMultiStep({ initialData, listingId }: {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [progress, setProgress] = useState(0);
   const isEditMode = !!listingId;
+  
+  // Initialize form for react-hook-form components
+  const methods = useForm({
+    defaultValues: formData
+  });
+  
+  // Update form when formData changes
+  useEffect(() => {
+    methods.reset(formData);
+  }, [formData, methods]);
   
   // Auto-save to localStorage
   useEffect(() => {
@@ -316,13 +88,13 @@ export default function ListingEditorMultiStep({ initialData, listingId }: {
   useEffect(() => {
     const calculateProgress = () => {
       const requiredFields = [
-        !!formData.website.domain,
+        !!formData.website?.domain,
         !!formData.price,
-        !!formData.type.listingType,
-        !!formData.language.primary,
-        !!formData.metrics.da,
-        !!formData.metrics.dr.value,
-        formData.niches.length > 0,
+        !!formData.type?.listingType,
+        !!formData.language?.primary,
+        !!formData.metrics?.da,
+        !!formData.metrics?.dr?.value,
+        formData.niches?.length > 0,
       ];
       
       const filledFields = requiredFields.filter(Boolean).length;
@@ -333,10 +105,10 @@ export default function ListingEditorMultiStep({ initialData, listingId }: {
     calculateProgress();
   }, [formData]);
   
-  const updateFormData = (sectionData: Partial<Omit<Listing, 'id' | 'status' | 'createdAt'>>) => {
+  const updateFormData = (newData: Partial<Omit<Listing, 'id' | 'status' | 'createdAt'>>) => {
     setFormData(prev => ({
       ...prev,
-      ...sectionData,
+      ...newData,
     }));
   };
   
@@ -373,77 +145,19 @@ export default function ListingEditorMultiStep({ initialData, listingId }: {
     
     try {
       console.log('Starting form submission process');
-      console.log('Original form data:', formData);
-      
-      // Transform the form data to match the API's expected structure
-      const apiData = {
-        price: formData.price,
-        offerRate: formData.offerRate || 0,
-        website: {
-          domain: formData.website?.domain || '',
-          verified: formData.website?.verified || false,
-          tags: formData.website?.tags || []
-        },
-        type: {
-          listingType: formData.type?.listingType || 'guest-post',
-          permanent: Boolean(formData.type?.permanent),
-          months: formData.type?.permanent ? null : (formData.type?.months || 1),
-          wordCount: formData.type?.wordCount || 500,
-          workingDays: formData.type?.workingDays || 3,
-          contentWriter: formData.type?.contentWriter || 'BOTH'
-        },
-        language: {
-          primary: formData.language?.primary || 'English',
-          native: formData.language?.native || formData.language?.primary || 'English',
-          extra: formData.language?.extra || null
-        },
-        category: formData.category || 'General',
-        metrics: {
-          countryCode: formData.metrics?.countryCode || 'US',
-          countryTraffic: Array.isArray(formData.metrics?.countryTraffic) ? formData.metrics.countryTraffic : [],
-          dr: {
-            value: formData.metrics?.dr?.value || 0,
-            percentage: formData.metrics?.dr?.percentage || '+0%'
-          },
-          da: formData.metrics?.da || 0,
-          as: formData.metrics?.as || 0,
-          traffic: formData.traffic?.monthly || formData.metrics?.traffic || 0,
-          keywords: formData.metrics?.keywords || 0,
-          refDomains: formData.metrics?.refDomains || 0
-        },
-        niches: Array.isArray(formData.niches) ? formData.niches : [],
-        acceptedContent: formData.acceptedContent || {
-          casino: 'NOT_ACCEPTED',
-          finance: 'NOT_ACCEPTED',
-          erotic: 'NOT_ACCEPTED',
-          dating: 'NOT_ACCEPTED',
-          crypto: 'NOT_ACCEPTED',
-          cbd: 'NOT_ACCEPTED',
-          medicine: 'NOT_ACCEPTED'
-        },
-        publisherNote: formData.publisherNote || ''
-      };
-
-      console.log('Submitting formatted data to API:', apiData);
+      console.log('Form data:', formData);
       
       // Make an API call to create or update the listing
       const response = await fetch(isEditMode ? `/api/listings/${listingId}` : '/api/listings', {
         method: isEditMode ? 'PUT' : 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(apiData),
+        body: JSON.stringify(formData),
       });
-      
-      console.log('API response status:', response.status);
       
       if (!response.ok) {
         const errorData = await response.json();
-        console.error('API error response:', errorData);
         throw new Error(errorData.error || 'Something went wrong');
       }
-      
-      // Parse the response but we don't need to use it
-      const responseData = await response.json();
-      console.log('API success response:', responseData);
       
       if (isEditMode) {
         toast({
@@ -489,7 +203,7 @@ export default function ListingEditorMultiStep({ initialData, listingId }: {
     } finally {
       setIsSubmitting(false);
     }
-  }
+  };
   
   const CurrentStepComponent = steps[activeStep].component;
   
@@ -524,23 +238,25 @@ export default function ListingEditorMultiStep({ initialData, listingId }: {
           ))}
         </TabsList>
         
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={activeStep}
-            initial={{ opacity: 0, x: 10 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: -10 }}
-            transition={{ duration: 0.2 }}
-          >
-            <Card className="p-6">
-              <CurrentStepComponent 
-                data={formData} 
-                onChange={updateFormData} 
-                isSubmitting={isSubmitting}
-              />
-            </Card>
-          </motion.div>
-        </AnimatePresence>
+        <RHFFormProvider {...methods}>
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={activeStep}
+              initial={{ opacity: 0, x: 10 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -10 }}
+              transition={{ duration: 0.2 }}
+            >
+              <Card className="p-6">
+                <CurrentStepComponent 
+                  formData={formData} 
+                  updateFormData={updateFormData}
+                  control={methods.control}
+                />
+              </Card>
+            </motion.div>
+          </AnimatePresence>
+        </RHFFormProvider>
       </Tabs>
       
       {/* Navigation buttons */}

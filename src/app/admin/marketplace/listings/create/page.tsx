@@ -2,29 +2,19 @@
 
 import { Button } from '@/components/ui/button';
 import { motion } from 'framer-motion';
-import { ArrowLeft, Save } from 'lucide-react';
+import { ArrowLeft } from 'lucide-react';
 import dynamic from 'next/dynamic';
 import { useRouter } from 'next/navigation';
-import { Suspense, useState } from 'react';
+import { Suspense } from 'react';
 
 // Dynamic import for client-only rendering
-const ListingEditor = dynamic(
-  () => import('@/components/admin/marketplace/ListingEditor'),
+const ListingEditorMultiStep = dynamic(
+  () => import('@/components/admin/marketplace/ListingEditorMultiStep'),
   { ssr: false }
 );
 
 export default function CreateListingPage() {
   const router = useRouter();
-  const [isSaving, setIsSaving] = useState(false);
-
-  const handleSave = async () => {
-    setIsSaving(true);
-    // Simulate API call
-    setTimeout(() => {
-      setIsSaving(false);
-      router.push('/admin/marketplace/listings');
-    }, 1500);
-  };
 
   return (
     <div className="space-y-6 pb-16">
@@ -49,25 +39,11 @@ export default function CreateListingPage() {
           </div>
           <p className="text-gray-500 mt-1 ml-10">Add a new website to your marketplace listings</p>
         </div>
-        
-        <Button 
-          onClick={handleSave} 
-          size="lg" 
-          disabled={isSaving}
-          className="px-6 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 transition-all duration-300 shadow-md hover:shadow-xl"
-        >
-          {isSaving ? 'Saving...' : (
-            <>
-              <Save className="mr-2 h-4 w-4" />
-              Save Listing
-            </>
-          )}
-        </Button>
       </motion.div>
 
-      <div className="bg-white rounded-xl shadow-xl border border-gray-100 overflow-hidden">
+      <div className="bg-white rounded-xl shadow-xl border border-gray-100 overflow-hidden p-6">
         <Suspense fallback={<div className="p-8">Loading editor...</div>}>
-          <ListingEditor />
+          <ListingEditorMultiStep />
         </Suspense>
       </div>
     </div>
