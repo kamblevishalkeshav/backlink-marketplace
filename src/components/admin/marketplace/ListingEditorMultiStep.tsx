@@ -17,7 +17,7 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { ChevronLeft, ChevronRight, Save } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
-import { FormProvider, useForm } from 'react-hook-form';
+import { FormProvider as RHFFormProvider, useForm } from 'react-hook-form';
 
 // Define the steps with their components
 const steps = [
@@ -42,10 +42,9 @@ export default function ListingEditorMultiStep({ initialData, listingId }: {
   const [progress, setProgress] = useState(0);
   const isEditMode = !!listingId;
   
-  // Initialize form for react-hook-form components with proper nesting
+  // Initialize form for react-hook-form components
   const methods = useForm({
-    defaultValues: formData,
-    mode: "onChange"
+    defaultValues: formData
   });
   
   // Update form when formData changes
@@ -73,7 +72,6 @@ export default function ListingEditorMultiStep({ initialData, listingId }: {
         try {
           const parsedData = JSON.parse(savedDraft);
           setFormData(parsedData);
-          methods.reset(parsedData);
           toast({
             title: "Draft loaded",
             description: "Your previous draft has been loaded.",
@@ -84,7 +82,7 @@ export default function ListingEditorMultiStep({ initialData, listingId }: {
         }
       }
     }
-  }, [initialData, isEditMode, methods]);
+  }, [initialData, isEditMode]);
   
   // Calculate progress based on filled fields
   useEffect(() => {
@@ -108,41 +106,25 @@ export default function ListingEditorMultiStep({ initialData, listingId }: {
   }, [formData]);
   
   const updateFormData = (newData: Partial<Omit<Listing, 'id' | 'status' | 'createdAt'>>) => {
-    setFormData(prev => {
-      const updated = {
-        ...prev,
-        ...newData,
-      };
-      
-      // Update the form with the new values
-      methods.reset(updated, { keepValues: true });
-      
-      return updated;
-    });
+    setFormData(prev => ({
+      ...prev,
+      ...newData,
+    }));
   };
   
   const handleNext = () => {
-    const currentData = methods.getValues();
-    setFormData(currentData);
-    
     if (activeStep < steps.length - 1) {
       setActiveStep(prev => prev + 1);
     }
   };
   
   const handlePrevious = () => {
-    const currentData = methods.getValues();
-    setFormData(currentData);
-    
     if (activeStep > 0) {
       setActiveStep(prev => prev - 1);
     }
   };
   
   const handleTabChange = (value: string) => {
-    const currentData = methods.getValues();
-    setFormData(currentData);
-    
     const index = steps.findIndex(step => step.id === value);
     if (index !== -1) {
       setActiveStep(index);
@@ -150,9 +132,7 @@ export default function ListingEditorMultiStep({ initialData, listingId }: {
   };
   
   const handleSaveDraft = () => {
-    const currentData = methods.getValues();
-    setFormData(currentData);
-    localStorage.setItem('listing-draft', JSON.stringify(currentData));
+    localStorage.setItem('listing-draft', JSON.stringify(formData));
     toast({
       title: "Draft saved",
       description: "Your listing draft has been saved.",
@@ -165,15 +145,13 @@ export default function ListingEditorMultiStep({ initialData, listingId }: {
     
     try {
       console.log('Starting form submission process');
-      const currentData = methods.getValues();
-      setFormData(currentData);
-      console.log('Form data:', currentData);
+      console.log('Form data:', formData);
       
       // Make an API call to create or update the listing
       const response = await fetch(isEditMode ? `/api/listings/${listingId}` : '/api/listings', {
         method: isEditMode ? 'PUT' : 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(currentData),
+        body: JSON.stringify(formData),
       });
       
       if (!response.ok) {
@@ -227,6 +205,8 @@ export default function ListingEditorMultiStep({ initialData, listingId }: {
     }
   };
   
+  const CurrentStepComponent = steps[activeStep].component;
+  
   return (
     <div className="space-y-8">
       {/* Progress indicator */}
@@ -258,7 +238,7 @@ export default function ListingEditorMultiStep({ initialData, listingId }: {
           ))}
         </TabsList>
         
-        <FormProvider {...methods}>
+        <RHFFormProvider {...methods}>
           <AnimatePresence mode="wait">
             <motion.div
               key={activeStep}
@@ -268,137 +248,15 @@ export default function ListingEditorMultiStep({ initialData, listingId }: {
               transition={{ duration: 0.2 }}
             >
               <Card className="p-6">
-                {activeStep === 0 && (
-                  <BasicInfoSection 
-                    formData={formData} 
-                    updateFormData={updateFormData}
-                    control={methods.control}
-                  />
-                )}
-                
-                {activeStep === 1 && (
-                  <ContentSection 
-                    formData={formData} 
-                    updateFormData={updateFormData}
-                    control={methods.control}
-                  />
-                )}
-                
-                {activeStep === 2 && (
-                  <MetricsSection 
-                    formData={formData} 
-                    updateFormData={updateFormData}
-                    control={methods.control}
-                  />
-                )}
-                
-                {activeStep === 3 && (
-                  <TrafficSection 
-                    control={methods.control}
-                    countryTraffic={formData.metrics.countryTraffic || []}
-                    onAddCountry={() => {
-                      // Get current form data
-                      const currentData = methods.getValues();
-                      const currentTraffic = [...(currentData.metrics?.countryTraffic || [])];
-                      
-                      // Add a new country
-                      currentTraffic.push({
-                        countryCode: '',
-                        percentage: 0,
-                        traffic: 0
-                      });
-                      
-                      // Update form data
-                      updateFormData({
-                        metrics: {
-                          ...currentData.metrics,
-                          countryTraffic: currentTraffic
-                        }
-                      });
-                    }}
-                    onRemoveCountry={(index) => {
-                      const currentData = methods.getValues();
-                      const currentTraffic = [...(currentData.metrics?.countryTraffic || [])];
-                      
-                      if (currentTraffic.length > 1) {
-                        currentTraffic.splice(index, 1);
-                        
-                        updateFormData({
-                          metrics: {
-                            ...currentData.metrics,
-                            countryTraffic: currentTraffic
-                          }
-                        });
-                      }
-                    }}
-                    onCountryChange={(index, country) => {
-                      const currentData = methods.getValues();
-                      const currentTraffic = [...(currentData.metrics?.countryTraffic || [])];
-                      
-                      if (currentTraffic[index]) {
-                        currentTraffic[index].countryCode = country;
-                        
-                        updateFormData({
-                          metrics: {
-                            ...currentData.metrics,
-                            countryTraffic: currentTraffic
-                          }
-                        });
-                      }
-                    }}
-                  />
-                )}
-                
-                {activeStep === 4 && (
-                  <NichesSection 
-                    control={methods.control}
-                    onAddNiche={(niche) => {
-                      const currentData = methods.getValues();
-                      const currentNiches = [...(currentData.niches || [])];
-                      
-                      if (!currentNiches.includes(niche)) {
-                        currentNiches.push(niche);
-                        
-                        // Update form data
-                        updateFormData({
-                          niches: currentNiches
-                        });
-                        
-                        // Also update form fields directly
-                        methods.setValue('niches', currentNiches);
-                      }
-                    }}
-                    onRemoveNiche={(niche) => {
-                      const currentData = methods.getValues();
-                      const currentNiches = [...(currentData.niches || [])];
-                      
-                      const index = currentNiches.indexOf(niche);
-                      if (index !== -1) {
-                        currentNiches.splice(index, 1);
-                        
-                        // Update form data
-                        updateFormData({
-                          niches: currentNiches
-                        });
-                        
-                        // Also update form fields directly
-                        methods.setValue('niches', currentNiches);
-                      }
-                    }}
-                  />
-                )}
-                
-                {activeStep === 5 && (
-                  <SubmitSection 
-                    formData={formData} 
-                    updateFormData={updateFormData}
-                    control={methods.control}
-                  />
-                )}
+                <CurrentStepComponent 
+                  formData={formData} 
+                  updateFormData={updateFormData}
+                  control={methods.control}
+                />
               </Card>
             </motion.div>
           </AnimatePresence>
-        </FormProvider>
+        </RHFFormProvider>
       </Tabs>
       
       {/* Navigation buttons */}
