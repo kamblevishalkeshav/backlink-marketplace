@@ -372,31 +372,36 @@ export default function ListingEditorMultiStep({ initialData, listingId }: {
     setIsSubmitting(true);
     
     try {
+      console.log('Starting form submission process');
+      console.log('Original form data:', formData);
+      
       // Transform the form data to match the API's expected structure
       const apiData = {
-        domain: formData.website.domain,
-        price: formData.price,
+        domain: formData.website?.domain || '',
+        price: formData.price || 0,
         offerRate: formData.offerRate || null,
-        tags: formData.website.tags || [],
-        listingType: formData.type.listingType,
-        permanent: formData.type.permanent,
-        months: formData.type.permanent ? null : formData.type.months,
-        wordCount: formData.type.wordCount || 500,
-        workingDays: formData.type.workingDays || 3,
-        contentWriter: formData.type.contentWriter || 'BOTH',
-        primaryLanguage: formData.language.primary,
-        nativeLanguage: formData.language.native || formData.language.primary,
-        extraLanguage: formData.language.extra,
+        tags: formData.website?.tags || [],
+        // Ensure listingType is in the correct format
+        listingType: formData.type?.listingType?.toUpperCase() || 'GUEST_POST',
+        permanent: Boolean(formData.type?.permanent),
+        months: formData.type?.permanent ? null : (formData.type?.months || 1),
+        wordCount: formData.type?.wordCount || 500,
+        workingDays: formData.type?.workingDays || 3,
+        // Ensure contentWriter is in the correct format
+        contentWriter: formData.type?.contentWriter?.toUpperCase() || 'BOTH',
+        primaryLanguage: formData.language?.primary || 'English',
+        nativeLanguage: formData.language?.native || formData.language?.primary || 'English',
+        extraLanguage: formData.language?.extra || null,
         category: formData.category || 'General',
-        countryCode: formData.metrics.countryCode || 'US',
-        da: formData.metrics.da,
-        drValue: formData.metrics.dr.value,
-        drPercentage: formData.metrics.dr.percentage || '+0%',
-        as: formData.metrics.as || 0,
-        traffic: formData.traffic?.monthly || formData.metrics.traffic || 0,
-        keywords: formData.metrics.keywords || 0,
-        refDomains: formData.metrics.refDomains || 0,
-        niches: formData.niches,
+        countryCode: formData.metrics?.countryCode || 'US',
+        da: formData.metrics?.da || 0,
+        drValue: formData.metrics?.dr?.value || 0,
+        drPercentage: formData.metrics?.dr?.percentage || '+0%',
+        as: formData.metrics?.as || 0,
+        traffic: formData.traffic?.monthly || formData.metrics?.traffic || 0,
+        keywords: formData.metrics?.keywords || 0,
+        refDomains: formData.metrics?.refDomains || 0,
+        niches: Array.isArray(formData.niches) ? formData.niches : [],
         publisherNote: formData.publisherNote || '',
         acceptedContent: formData.acceptedContent || {
           casino: 'NOT_ACCEPTED',
@@ -407,10 +412,10 @@ export default function ListingEditorMultiStep({ initialData, listingId }: {
           cbd: 'NOT_ACCEPTED',
           medicine: 'NOT_ACCEPTED'
         },
-        countryTraffic: formData.metrics.countryTraffic || []
+        countryTraffic: Array.isArray(formData.metrics?.countryTraffic) ? formData.metrics.countryTraffic : []
       };
 
-      console.log('Submitting data:', apiData);
+      console.log('Submitting formatted data to API:', apiData);
       
       // Make an API call to create or update the listing
       const response = await fetch(isEditMode ? `/api/listings/${listingId}` : '/api/listings', {
@@ -419,13 +424,17 @@ export default function ListingEditorMultiStep({ initialData, listingId }: {
         body: JSON.stringify(apiData),
       });
       
+      console.log('API response status:', response.status);
+      
       if (!response.ok) {
         const errorData = await response.json();
+        console.error('API error response:', errorData);
         throw new Error(errorData.error || 'Something went wrong');
       }
       
       // Parse the response but we don't need to use it
-      await response.json();
+      const responseData = await response.json();
+      console.log('API success response:', responseData);
       
       if (isEditMode) {
         toast({

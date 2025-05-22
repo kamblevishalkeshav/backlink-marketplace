@@ -174,16 +174,47 @@ export async function GET(request: NextRequest) {
 // POST /api/listings - Create a new listing
 export async function POST(request: NextRequest) {
   try {
+    console.log('POST /api/listings - Starting request processing');
+    
+    // Check authentication
     const session = await getServerSession(authOptions);
+    console.log('Authentication check:', session ? 'Authenticated' : 'Not authenticated');
     
     if (!session) {
+      console.log('Authentication failed - returning 401');
       return NextResponse.json(
         { error: 'Unauthorized' },
         { status: 401 }
       );
     }
     
-    const data = await request.json();
+    // Log user info
+    console.log('User ID:', session.user?.id);
+    console.log('User email:', session.user?.email);
+    
+    let data;
+    try {
+      data = await request.json();
+      console.log('Parsed request data successfully');
+    } catch (parseError) {
+      console.error('Failed to parse request JSON:', parseError);
+      return NextResponse.json(
+        { error: 'Invalid request format' },
+        { status: 400 }
+      );
+    }
+    
+    // Log incoming data for debugging
+    console.log('Received data:', JSON.stringify(data));
+    
+    // Validate required fields
+    if (!data.domain) {
+      console.error('Missing required field: domain');
+      return NextResponse.json(
+        { error: 'Domain is required' },
+        { status: 400 }
+      );
+    }
     
     // Extract and format data
     const {
@@ -215,65 +246,96 @@ export async function POST(request: NextRequest) {
       tags = [],
     } = data;
     
-    // Create the listing
-    const listing = await prisma.listing.create({
-      data: {
-        domain,
-        price: parseFloat(price) || 0,
-        offerRate: offerRate ? parseFloat(offerRate) : null,
-        tags,
-        listingType,
-        permanent,
-        months: permanent ? null : parseInt(months) || null,
-        wordCount: parseInt(wordCount) || 0,
-        workingDays: parseInt(workingDays) || 1,
-        contentWriter,
-        primaryLanguage,
-        nativeLanguage,
-        extraLanguage,
-        category,
-        countryCode,
-        da: parseInt(da) || 0,
-        drValue: parseInt(drValue) || 0,
-        drPercentage: drPercentage || '',
-        as: parseInt(as) || 0,
-        traffic: parseInt(traffic) || 0,
-        keywords: parseInt(keywords) || 0,
-        refDomains: parseInt(refDomains) || 0,
-        niches,
-        publisherNote,
-        status: 'PENDING', // All new listings are pending review by default
-        createdById: session.user?.id,
-        
-        // Create the accepted content object
-        acceptedContent: {
-          create: {
-            casino: acceptedContent?.casino || 'NOT_ACCEPTED',
-            finance: acceptedContent?.finance || 'NOT_ACCEPTED',
-            erotic: acceptedContent?.erotic || 'NOT_ACCEPTED',
-            dating: acceptedContent?.dating || 'NOT_ACCEPTED',
-            crypto: acceptedContent?.crypto || 'NOT_ACCEPTED',
-            cbd: acceptedContent?.cbd || 'NOT_ACCEPTED',
-            medicine: acceptedContent?.medicine || 'NOT_ACCEPTED',
+    console.log('Extracted fields successfully');
+    
+    try {
+      // Create the listing
+      console.log('Attempting to create listing in database for domain:', domain);
+      const listing = await prisma.listing.create({
+        data: {
+          domain,
+          price: parseFloat(price) || 0,
+          offerRate: offerRate ? parseFloat(offerRate) : null,
+          tags: Array.isArray(tags) ? tags : [],
+          listingType: listingType || 'GUEST_POST',
+          permanent: Boolean(permanent),
+          months: permanent ? null : parseInt(months) || null,
+          wordCount: parseInt(wordCount) || 0,
+          workingDays: parseInt(workingDays) || 1,
+          contentWriter: contentWriter || 'BOTH',
+          primaryLanguage: primaryLanguage || 'English',
+          nativeLanguage: nativeLanguage || primaryLanguage || 'English',
+          extraLanguage,
+          category: category || 'General',
+          countryCode: countryCode || 'US',
+          da: parseInt(da) || 0,
+          drValue: parseInt(drValue) || 0,
+          drPercentage: drPercentage || '',
+          as: parseInt(as) || 0,
+          traffic: parseInt(traffic) || 0,
+          keywords: parseInt(keywords) || 0,
+          refDomains: parseInt(refDomains) || 0,
+          niches: Array.isArray(niches) ? niches : [],
+          publisherNote,
+          status: 'PENDING', // All new listings are pending review by default
+          createdById: session.user?.id,
+          verified: false,
+          
+          // Create the accepted content object
+          acceptedContent: {
+            create: {
+              casino: acceptedContent?.casino || 'NOT_ACCEPTED',
+              finance: acceptedContent?.finance || 'NOT_ACCEPTED',
+              erotic: acceptedContent?.erotic || 'NOT_ACCEPTED',
+              dating: acceptedContent?.dating || 'NOT_ACCEPTED',
+              crypto: acceptedContent?.crypto || 'NOT_ACCEPTED',
+              cbd: acceptedContent?.cbd || 'NOT_ACCEPTED',
+              medicine: acceptedContent?.medicine || 'NOT_ACCEPTED',
+            }
+          },
+          
+          // Create country traffic data
+          countryTraffic: {
+            create: Array.isArray(countryTraffic) && countryTraffic.length > 0
+              ? countryTraffic
+                  .filter((item: any) => item.countryCode && item.percentage)
+                  .map((item: any) => ({
+                    countryCode: item.countryCode,
+                    percentage: parseInt(item.percentage) || 0,
+                    traffic: parseInt(item.traffic) || 0,
+                  }))
+              : []
           }
         },
-        
-        // Create country traffic data
-        countryTraffic: {
-          create: countryTraffic
-            ?.filter((item: any) => item.countryCode && item.percentage)
-            ?.map((item: any) => ({
-              countryCode: item.countryCode,
-              percentage: parseInt(item.percentage) || 0,
-              traffic: parseInt(item.traffic) || 0,
-            })) || [],
-        }
-      },
-    });
-    
-    return NextResponse.json(listing);
+      });
+      
+      console.log('Listing created successfully:', listing.id);
+      return NextResponse.json(listing);
+    } catch (dbError: any) {
+      console.error('Database error:', dbError);
+      // Check for specific database errors
+      if (dbError.code === 'P2002') {
+        return NextResponse.json(
+          { error: 'A listing with this domain already exists' },
+          { status: 409 }
+        );
+      }
+      if (dbError.code === 'P2003') {
+        return NextResponse.json(
+          { error: 'Foreign key constraint failed: ' + dbError.meta?.field_name },
+          { status: 400 }
+        );
+      }
+      throw dbError; // Re-throw to be caught by the outer catch
+    }
   } catch (error) {
-    console.error('Error creating listing:', error);
+    console.error('Error creating listing (detailed):', error);
+    if (error instanceof Error) {
+      return NextResponse.json(
+        { error: `Failed to create listing: ${error.message}` },
+        { status: 500 }
+      );
+    }
     return NextResponse.json(
       { error: 'Failed to create listing' },
       { status: 500 }

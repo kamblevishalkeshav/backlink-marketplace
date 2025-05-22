@@ -33,6 +33,9 @@ const nextConfig = {
   webpack: (config, { isServer }) => {
     if (isServer) {
       // Ensure Prisma is handled correctly
+      config.externals = [...config.externals, 'prisma', 'pg', 'postgresql', '@prisma/client'];
+      
+      // Handle specific Node.js internals
       config.externals.push('_http_common');
     }
     return config;
@@ -40,6 +43,7 @@ const nextConfig = {
   // Updated experimental features
   experimental: {
     optimizePackageImports: ['lucide-react'],
+    serverComponentsExternalPackages: ['@prisma/client', 'pg'],
   },
   // Set top level "pageExtensions" to process only specific file types
   pageExtensions: ['js', 'jsx', 'ts', 'tsx'],
