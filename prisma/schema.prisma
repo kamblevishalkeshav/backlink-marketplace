@@ -18,13 +18,14 @@ datasource db {
 
 // Define your models below
 model User {
-  id        String   @id @default(cuid())
-  email     String   @unique
+  id        String    @id @default(cuid())
+  email     String    @unique
   name      String?
-  role      Role     @default(USER)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  role      Role      @default(USER)
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
   pages     Page[]
+  listings  Listing[]
 }
 
 enum Role {
@@ -92,4 +93,88 @@ enum AssetType {
   IMAGE
   VIDEO
   DOCUMENT
+}
+
+// Listing Models
+enum ListingStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum ListingType {
+  GUEST_POST
+  HOMEPAGE_LINK
+  INNERPAGE_LINK
+  SITEWIDE_LINK
+}
+
+enum ContentWriterType {
+  BOTH
+  YOU
+  PUBLISHER
+}
+
+enum ContentAcceptanceStatus {
+  ACCEPTED
+  NOT_ACCEPTED
+  PROHIBITED
+}
+
+model Listing {
+  id           String       @id @default(cuid())
+  price        Float
+  offerRate    Float?
+  domain       String
+  verified     Boolean      @default(false)
+  tags         String[]
+  listingType  ListingType
+  permanent    Boolean
+  months       Int?
+  wordCount    Int
+  workingDays  Int
+  contentWriter ContentWriterType
+  primaryLanguage String
+  nativeLanguage  String
+  extraLanguage   String?
+  category     String
+  countryCode  String
+  da           Int
+  drValue      Int
+  drPercentage String
+  as           Int
+  traffic      Int
+  keywords     Int
+  refDomains   Int
+  niches       String[]
+  publisherNote String?
+  status       ListingStatus @default(PENDING)
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  createdBy    User?         @relation(fields: [createdById], references: [id])
+  createdById  String?
+  countryTraffic CountryTraffic[]
+  acceptedContent AcceptedContent?
+}
+
+model CountryTraffic {
+  id           String   @id @default(cuid())
+  countryCode  String
+  percentage   Int
+  traffic      Int?
+  listing      Listing  @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  listingId    String
+}
+
+model AcceptedContent {
+  id           String                 @id @default(cuid())
+  casino       ContentAcceptanceStatus? @default(NOT_ACCEPTED)
+  finance      ContentAcceptanceStatus? @default(NOT_ACCEPTED)
+  erotic       ContentAcceptanceStatus? @default(NOT_ACCEPTED)
+  dating       ContentAcceptanceStatus? @default(NOT_ACCEPTED)
+  crypto       ContentAcceptanceStatus? @default(NOT_ACCEPTED)
+  cbd          ContentAcceptanceStatus? @default(NOT_ACCEPTED)
+  medicine     ContentAcceptanceStatus? @default(NOT_ACCEPTED)
+  listing      Listing                @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  listingId    String                 @unique
 }

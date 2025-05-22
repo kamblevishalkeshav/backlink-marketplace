@@ -1,10 +1,6 @@
 {
-  "buildCommand": "node vercelBuild.js",
-  "devCommand": "npm run dev",
-  "installCommand": "npm install",
   "framework": "nextjs",
-  "outputDirectory": ".next",
-  "env": {
-    "PRISMA_GENERATE_DATAPROXY": "true"
-  }
+  "buildCommand": "next build",
+  "devCommand": "next dev",
+  "installCommand": "npm install"
 } 

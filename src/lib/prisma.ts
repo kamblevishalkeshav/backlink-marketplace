@@ -10,23 +10,39 @@ declare global {
   var prisma: PrismaClient | undefined
 }
 
-// Simple function to create a Prisma client with Accelerate
+// Create the Prisma client with Accelerate
 function createPrismaClient() {
-  // During build phase or static generation, return a dummy client
-  if (process.env.NODE_ENV === 'production' && process.env.VERCEL_ENV === undefined) {
-    return {} as PrismaClient & ReturnType<typeof withAccelerate>;
+  // During build phase, create a basic client
+  const client = new PrismaClient({
+    log: process.env.NODE_ENV === 'development' 
+      ? ['query', 'error', 'warn'] 
+      : ['error'],
+  });
+  
+  // Only use Accelerate in non-development environments
+  if (process.env.NODE_ENV !== 'development') {
+    return client.$extends(withAccelerate());
   }
   
-  return new PrismaClient().$extends(withAccelerate());
+  return client;
 }
 
-// In development, reuse the same client across hot reloads
+// Use the global client in development to prevent connection pool exhaustion
 // In production, create a fresh client for each request
 const prisma = global.prisma || createPrismaClient();
 
-// Only cache the client in development
-if (process.env.NODE_ENV !== 'production') {
+// Only store the client in global in development
+if (process.env.NODE_ENV === 'development') {
   global.prisma = prisma;
 }
 
-export default prisma; 
+// Test the connection
+prisma.$connect()
+  .then(() => {
+    console.log('Database connection successful');
+  })
+  .catch((e) => {
+    console.error('Database connection failed:', e);
+  });
+
+export default prisma;

@@ -1,0 +1,365 @@
+/* Import all Tailwind layers (v4) */
+@import "tailwindcss";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+:root {
+  /* Color Palette from Anic Digital Style Guide - Light Mode Default Values */
+
+  /* General Theme Colors */
+  --background: hsl(210 20% 98%);         /* Light gray background - #f9fafb */
+  --foreground: hsl(200 6% 18%);          /* Dark gray text - #2b2e2f */
+  
+  --card: hsl(0 0% 100%);                 /* White card background */
+  --card-foreground: hsl(200 6% 18%);      /* Dark text on cards */
+  
+  --popover: hsl(0 0% 100%);              /* White popover background */
+  --popover-foreground: hsl(200 6% 18%);   /* Dark text on popovers */
+  
+  --primary: hsl(152 65% 47%);            /* #2ac37a - Brand Bright Green */
+  --primary-foreground: hsl(0 0% 100%);    /* White text on primary */
+  
+  --secondary: hsl(154 44% 49%);          /* #47b49e - Brand Teal */
+  --secondary-foreground: hsl(0 0% 100%);  /* White text on secondary */
+  
+  --accent: hsl(83 60% 53%);              /* #87c44d - Brand Lime */
+  --accent-foreground: hsl(0 0% 100%);     /* White text on accent */
+  
+  --muted: hsl(210 20% 98%);              /* Light gray for subtle backgrounds */
+  --muted-foreground: hsl(215 16% 47%);    /* Medium gray for secondary text */
+  
+  --destructive: hsl(0 85% 60%);          /* Red for error states */
+  --destructive-foreground: hsl(0 0% 100%); /* White text on destructive */
+  
+  --border: hsl(216 33% 97%);             /* #EAEAEA - Light border color */
+  --input: hsl(216 33% 97%);              /* #EAEAEA - Input border color */
+  --ring: hsl(152 65% 47%);               /* #2ac37a - Ring color matches primary */
+
+  /* Border Radius from Anic Digital Style Guide */
+  --radius-sm: 8px;  /* Small elements (buttons, inputs) */
+  --radius-md: 12px; /* Cards and Panels */
+  --radius-lg: 16px; /* Large Elements */
+  --radius: 0.625rem;
+  
+  /* Chart colors if needed */
+  --chart-1: oklch(0.646 0.222 41.116);
+  --chart-2: oklch(0.6 0.118 184.704);
+  --chart-3: oklch(0.398 0.07 227.392);
+  --chart-4: oklch(0.828 0.189 84.429);
+  --chart-5: oklch(0.769 0.188 70.08);
+  
+  /* Sidebar variables if needed */
+  --sidebar: oklch(0.985 0 0);
+  --sidebar-foreground: oklch(0.145 0 0);
+  --sidebar-primary: oklch(0.205 0 0);
+  --sidebar-primary-foreground: oklch(0.985 0 0);
+  --sidebar-accent: oklch(0.97 0 0);
+  --sidebar-accent-foreground: oklch(0.205 0 0);
+  --sidebar-border: oklch(0.922 0 0);
+  --sidebar-ring: oklch(0.708 0 0);
+
+  /* Added variables for login page */
+  --skeleton: hsl(0, 0%, 90%);
+  --btn-border: hsl(214deg, 31.8%, 91.4%);
+  
+  /* Rainbow button variables */
+  --color-1: 0 100% 63%;
+  --color-2: 270 100% 63%;
+  --color-3: 210 100% 63%;
+  --color-4: 195 100% 63%;
+  --color-5: 90 100% 63%;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  /* Font family is Inter, to be set in layout.tsx or body */
+  --font-sans: 'Inter', sans-serif; 
+  --font-mono: 'monospace'; 
+  --color-sidebar-ring: var(--sidebar-ring); 
+  --color-sidebar-border: var(--sidebar-border); 
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground); 
+  --color-sidebar-accent: var(--sidebar-accent); 
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground); 
+  --color-sidebar-primary: var(--sidebar-primary); 
+  --color-sidebar-foreground: var(--sidebar-foreground); 
+  --color-sidebar: var(--sidebar); 
+  --color-chart-5: var(--chart-5); 
+  --color-chart-4: var(--chart-4); 
+  --color-chart-3: var(--chart-3); 
+  --color-chart-2: var(--chart-2); 
+  --color-chart-1: var(--chart-1); 
+  --color-ring: var(--ring); 
+  --color-input: var(--input); 
+  --color-border: var(--border); 
+  --color-destructive: var(--destructive); 
+  --color-accent-foreground: var(--accent-foreground); 
+  --color-accent: var(--accent); 
+  --color-muted-foreground: var(--muted-foreground); 
+  --color-muted: var(--muted); 
+  --color-secondary-foreground: var(--secondary-foreground); 
+  --color-secondary: var(--secondary); 
+  --color-primary-foreground: var(--primary-foreground); 
+  --color-primary: var(--primary); 
+  --color-popover-foreground: var(--popover-foreground); 
+  --color-popover: var(--popover); 
+  --color-card-foreground: var(--card-foreground); 
+  --color-card: var(--card); /* Fallback mono font */ --radius-sm: calc(var(--radius) - 4px); --radius-md: calc(var(--radius) - 2px); --radius-lg: var(--radius); --radius-xl: calc(var(--radius) + 4px);
+}
+
+/* Login component styles */
+@layer components {
+  .g-button {
+    @apply rounded-[var(--radius)] border;
+    border-color: var(--btn-border)
+  }
+}
+
+/* Theme toggle enhancements */
+@layer components {
+  /* Custom styling for theme toggle switch */
+  .theme-toggle-switch [data-state="checked"] {
+    background: linear-gradient(to right, var(--primary), var(--secondary));
+  }
+  
+  .theme-toggle-switch [data-state="unchecked"] {
+    background-color: var(--muted-foreground);
+  }
+  
+  /* Theme transition */
+  body, html {
+    transition: background-color 0.3s ease, color 0.3s ease;
+  }
+  
+  /* Theme loading state */
+  .theme-loading {
+    min-height: 100vh;
+    background-color: var(--background);
+  }
+}
+
+body {
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Shadow Utility Classes from Anic Digital Style Guide */
+.card-shadow {
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+.dropdown-shadow {
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+}
+.button-shadow {
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+}
+
+/* Custom Card base style (can be extended in components) */
+.custom-card {
+  background-color: var(--card);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border);
+  /* Default to card-shadow, can be overridden */
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
+/* Button Styles from Anic Digital Style Guide */
+.btn-base {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 500; /* Button Text: Medium */
+  font-size: 16px;   /* Button Text: 16px */
+  letter-spacing: 0.5px; /* Button Text */
+  border-radius: var(--radius-sm); /* 8px */
+  padding: 12px 24px; /* 12px 24px */
+  transition: background-color 0.2s ease-in-out, border-color 0.2s ease-in-out, color 0.2s ease-in-out, transform 0.15s ease-in-out, box-shadow 0.2s ease-in-out;
+  line-height: 1.5; /* Added for consistency */
+  cursor: pointer;
+}
+
+.btn-primary {
+  background-image: linear-gradient(to right, var(--primary), var(--secondary));
+  background-size: 200% 100%;
+  background-position: 0 0;
+  color: var(--primary-foreground);
+}
+.btn-primary:hover {
+  background-position: 100% 0;
+  transform: translateY(-1px);
+}
+.btn-primary:active {
+  background-color: #0D6B63; /* Slightly darker than hover, an example */
+  transform: translateY(0);
+  box-shadow: inset 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.btn-secondary {
+  background-color: #FFFFFF;
+  color: var(--primary); /* #2DD4BF */
+  border: 1px solid var(--primary); /* #2DD4BF */
+}
+.btn-secondary:hover {
+  background-color: #ECFDF5; /* Light Green */
+  border-color: var(--secondary); /* #0F766E */
+  color: var(--secondary);
+  transform: translateY(-1px);
+}
+.btn-secondary:active {
+  background-color: #D1FAF3; /* Slightly darker light green */
+  transform: translateY(0);
+}
+
+.btn-tertiary {
+  background-color: transparent;
+  color: var(--primary); /* #2DD4BF */
+  /* Padding is already in btn-base, text buttons usually have less or specific padding if inline */
+}
+.btn-tertiary:hover {
+  background-color: #ECFDF5; /* Light Green */
+  color: var(--secondary);
+}
+
+/* Text link style (can be used for Secondary CTA in Hero) */
+.text-link-arrow {
+  color: var(--primary); /* Or #1E293B depending on context */
+  font-weight: 500;
+  display: inline-flex;
+  align-items: center;
+  transition: color 0.2s ease;
+}
+
+.text-link-arrow:hover {
+  color: var(--secondary);
+}
+
+.text-link-arrow svg {
+  margin-left: 0.375rem; /* 6px */
+  transition: transform 0.2s ease;
+}
+
+.text-link-arrow:hover svg {
+  transform: translateX(3px);
+}
+
+/* Background Helper for Hero (Light Green #ECFDF5) */
+.hero-bg {
+  background-color: #ECFDF5;
+}
+
+/* CTA Background Helper (Primary Green #2DD4BF gradient to Darker Green #0F766E) */
+.cta-gradient-bg {
+  background: linear-gradient(135deg, var(--primary), var(--secondary));
+}
+
+/* Scroll Reveal animations */
+.reveal-on-scroll {
+  opacity: 0;
+  transform: translateY(20px);
+  transition: opacity 0.6s ease-out, transform 0.6s ease-out;
+}
+.reveal-on-scroll.revealed {
+  opacity: 1 !important;
+  transform: translateY(0) !important;
+}
+
+/* Add any other global utilities or base styles here */
+
+/* Brand gradient utility */
+.brand-gradient {
+  background-image: linear-gradient(to right, var(--primary), var(--secondary));
+}
+
+/* Animation keyframes */
+@keyframes scale-in {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.animate-scale-in {
+  animation: scale-in 0.5s ease-out forwards;
+}
+
+/* Hover lift effect for cards */
+.hover-lift {
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.hover-lift:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.06);
+}
+
+.dark {
+  /* General Theme Colors */
+  --background: hsl(215 28% 17%);       /* Deep blue-gray that reduces eye strain */
+  --foreground: hsl(0 0% 98%);           /* Nearly white for high contrast readability */
+  
+  --card: hsl(215 28% 17%);             /* Card background matches general background */
+  --card-foreground: hsl(0 0% 98%);      /* Card text is nearly white */
+  
+  --popover: hsl(215 28% 17%);          /* Popover background matches general background */
+  --popover-foreground: hsl(0 0% 98%);   /* Popover text is nearly white */
+  
+  --primary: hsl(152 65% 47%);          /* #2ac37a - Bright green as main accent */
+  --primary-foreground: hsl(0 0% 98%);   /* White text on primary */
+  
+  --secondary: hsl(154 44% 49%);        /* #47b49e - Teal as complementary accent */
+  --secondary-foreground: hsl(0 0% 98%); /* White text on secondary */
+  
+  --muted: hsl(215 25% 27%);            /* Slightly lighter blue-gray for subtle containers */
+  --muted-foreground: hsl(215 20% 70%);  /* Light gray with blue tint for secondary text */
+  
+  --accent: hsl(83 60% 53%);            /* #87c44d - Lime green for highlights */
+  --accent-foreground: hsl(0 0% 98%);    /* White text on accent */
+  
+  --destructive: hsl(0 85% 60%);         /* Red for error states */
+  --destructive-foreground: hsl(0 0% 98%); /* White text on destructive */
+  
+  --border: hsl(215 28% 25%);           /* Dark blue-gray for subtle separation */
+  --input: hsl(215 28% 25%);            /* Input border matches border color */
+  --ring: hsl(152 65% 47% / 30%);       /* Ring is primary color with transparency */
+  
+  /* Added variables for specific UI elements */
+  --skeleton: hsl(215 28% 22%);
+  --btn-border: hsl(215 28% 25%);
+  
+  /* Special effect colors */
+  --brand-gradient-start: hsl(152 65% 47%);  /* #2ac37a */
+  --brand-gradient-end: hsl(154 44% 49%);    /* #47b49e */
+  
+  /* Section backgrounds */
+  --hero-bg: hsl(215 28% 17%);          /* Hero background */
+  --feature-bg: hsl(215 28% 19%);       /* Feature section background - slightly lighter */
+  --cta-bg-gradient-start: hsl(152 65% 47% / 90%); /* CTA gradient start */
+  --cta-bg-gradient-end: hsl(154 44% 49% / 90%);   /* CTA gradient end */
+  
+  /* Component specific colors */
+  --testimonial-card-bg: hsl(215 25% 27% / 10%);  /* Testimonial card background */
+  --pricing-card-bg: hsl(215 28% 17%);           /* Pricing card background */
+  --faq-question-color: hsl(0 0% 98%);           /* FAQ question text */
+  --faq-answer-color: hsl(215 20% 70%);          /* FAQ answer text */
+  
+  /* Header/Footer specific colors */
+  --nav-bg: hsl(215 28% 17% / 95%);              /* Navbar background with transparency */
+  --footer-bg: hsl(215 28% 17%);                 /* Footer background */
+  --footer-text: hsl(215 20% 70%);               /* Footer text */
+  --footer-link-hover: hsl(0 0% 98%);            /* Footer link hover color */
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}

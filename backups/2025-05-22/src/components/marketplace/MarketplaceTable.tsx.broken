@@ -1,0 +1,932 @@
+import AhrefsLogo from '@/components/icons/AhrefsLogo';
+import MozLogo from '@/components/icons/MozLogo';
+import SemrushLogo from '@/components/icons/SemrushLogo';
+import { useMarketplace } from '@/context/MarketplaceContext';
+import { ArrowUpDown, Check, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, Columns, Eye, EyeOff, Info } from 'lucide-react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+
+// Define column structure
+interface ColumnDef {
+  id: string;
+  name: string;
+  width: string;
+  minWidth?: string;
+  sortable?: boolean;
+  icon?: React.ReactNode;
+  iconSize?: number;
+}
+
+// Define mock data types
+interface Listing {
+  id: string;
+  price: number;
+  website: {
+    domain: string;
+    verified: boolean;
+  };
+  type: {
+    listingType: 'innerpage-link' | 'guest-post' | 'homepage-link' | 'sitewide-link';
+    permanent: boolean;
+    months?: number;
+  };
+  approx: {
+    workingDays: number;
+    wordCount?: number;
+  };
+  language: {
+    primary: string;
+    native: string;
+    extra?: string;
+  };
+  category: string;
+  metrics: {
+    countryCode: string;
+    dr: {
+      value: number;
+      percentage: string;
+    };
+    da: number;
+    as: number;
+    traffic: number;
+    keywords: number;
+    refDomains: number;
+  };
+  niches: string[];
+  publisherNote?: string;
+  created: string;
+}
+
+interface MarketplaceTableProps {
+  className?: string;
+}
+
+const MarketplaceTable = ({ className = '' }: MarketplaceTableProps) => {
+  // Create a ref for column settings dropdown
+  const columnSettingsRef = useRef<HTMLDivElement>(null);
+  // Create a ref for the table container to measure its width
+  const tableContainerRef = useRef<HTMLDivElement>(null);
+  
+  const { 
+    currentPage: contextCurrentPage, 
+    setCurrentPage: contextSetCurrentPage, 
+    totalPages: contextTotalPages,
+  } = useMarketplace();
+
+  // Local state for development
+  const [currentPage, setCurrentPage] = useState(contextCurrentPage || 1);
+  const [totalPages] = useState(contextTotalPages || 5);
+  const [activeListingType, setActiveListingType] = useState('guest-posts');
+  const [searchTerm, setSearchTerm] = useState('');
+  const [showColumnSettings, setShowColumnSettings] = useState(false);
+  const [loading] = useState(false);
+  
+  // State to manage visible columns - always start with exactly 8 columns
+  const [visibleColumnIds, setVisibleColumnIds] = useState<string[]>([]);
+  
+  // Effect to handle clicks outside the column settings dropdown
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (columnSettingsRef.current && !columnSettingsRef.current.contains(event.target as Node)) {
+        setShowColumnSettings(false);
+      }
+    };
+    
+    if (showColumnSettings) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+    
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showColumnSettings]);
+  
+  // Effect to sync with context when page changes
+  useEffect(() => {
+    if (currentPage !== contextCurrentPage && contextSetCurrentPage) {
+      contextSetCurrentPage(currentPage);
+    }
+  }, [currentPage, contextCurrentPage, contextSetCurrentPage]);
+
+  // Mock data for development and testing
+  const mockListings: Listing[] = useMemo(() => [
+    {
+      id: '1',
+      price: 100,
+      website: {
+        domain: 'example1.com',
+        verified: true,
+      },
+      type: {
+        listingType: 'guest-post',
+        permanent: true,
+      },
+      approx: {
+        workingDays: 3,
+        wordCount: 1000,
+      },
+      language: {
+        primary: 'English',
+        native: 'English',
+      },
+      category: 'Technology',
+      metrics: {
+        countryCode: 'US',
+        dr: {
+          value: 45,
+          percentage: '+5%',
+        },
+        da: 38,
+        as: 32,
+        traffic: 15000,
+        keywords: 2500,
+        refDomains: 120,
+      },
+      niches: ['Tech', 'Software', 'SaaS'],
+      publisherNote: 'No affiliate links allowed.',
+      created: '2023-08-15',
+    },
+    {
+      id: '2',
+      price: 150,
+      website: {
+        domain: 'example2.com',
+        verified: false,
+      },
+      type: {
+        listingType: 'innerpage-link',
+        permanent: false,
+        months: 6,
+      },
+      approx: {
+        workingDays: 5,
+      },
+      language: {
+        primary: 'English',
+        native: 'English',
+        extra: 'Spanish content available',
+      },
+      category: 'Marketing',
+      metrics: {
+        countryCode: 'UK',
+        dr: {
+          value: 62,
+          percentage: '+12%',
+        },
+        da: 53,
+        as: 42,
+        traffic: 35000,
+        keywords: 6000,
+        refDomains: 450,
+      },
+      niches: ['Marketing', 'SEO', 'Digital Marketing'],
+      created: '2023-09-20',
+    },
+    {
+      id: '3',
+      price: 200,
+      website: {
+        domain: 'example3.com',
+        verified: true,
+      },
+      type: {
+        listingType: 'homepage-link',
+        permanent: true,
+      },
+      approx: {
+        workingDays: 2,
+      },
+      language: {
+        primary: 'English',
+        native: 'English',
+      },
+      category: 'Finance',
+      metrics: {
+        countryCode: 'CA',
+        dr: {
+          value: 72,
+          percentage: '+3%',
+        },
+        da: 68,
+        as: 51,
+        traffic: 85000,
+        keywords: 12000,
+        refDomains: 850,
+      },
+      niches: ['Finance', 'Cryptocurrency', 'Investing'],
+      publisherNote: 'Finance links only, no crypto projects.',
+      created: '2023-10-05',
+    },
+    {
+      id: '4',
+      price: 85,
+      website: {
+        domain: 'example4.com',
+        verified: true,
+      },
+      type: {
+        listingType: 'sitewide-link',
+        permanent: false,
+        months: 12,
+      },
+      approx: {
+        workingDays: 4,
+        wordCount: 800,
+      },
+      language: {
+        primary: 'French',
+        native: 'French',
+        extra: 'English translation included',
+      },
+      category: 'Health',
+      metrics: {
+        countryCode: 'FR',
+        dr: {
+          value: 52,
+          percentage: '+8%',
+        },
+        da: 47,
+        as: 38,
+        traffic: 22000,
+        keywords: 4500,
+        refDomains: 210,
+      },
+      niches: ['Health', 'Wellness', 'Fitness'],
+      created: '2023-11-10',
+    },
+    {
+      id: '5',
+      price: 175,
+      website: {
+        domain: 'example5.com',
+        verified: false,
+      },
+      type: {
+        listingType: 'guest-post',
+        permanent: true,
+      },
+      approx: {
+        workingDays: 7,
+        wordCount: 1500,
+      },
+      language: {
+        primary: 'German',
+        native: 'German',
+      },
+      category: 'Lifestyle',
+      metrics: {
+        countryCode: 'DE',
+        dr: {
+          value: 58,
+          percentage: '+6%',
+        },
+        da: 52,
+        as: 45,
+        traffic: 42000,
+        keywords: 7800,
+        refDomains: 340,
+      },
+      niches: ['Lifestyle', 'Travel', 'Food'],
+      publisherNote: 'Local travel content preferred.',
+      created: '2023-12-01',
+    },
+  ], []);
+
+  // Define all available columns
+  const allColumns: ColumnDef[] = useMemo(() => [
+    { id: 'price', name: 'Price', width: 'w-[90px]', sortable: true },
+    { id: 'website', name: 'Website', width: 'w-[130px]', sortable: true },
+    { id: 'type', name: 'Type', width: 'w-[120px]', sortable: true },
+    { id: 'language', name: 'Language', width: 'w-[90px]' },
+    { id: 'category', name: 'Category', width: 'w-[90px]' },
+    { id: 'country', name: 'Country', width: 'w-[90px]', icon: <AhrefsLogo width={30} height={20} /> },
+    { id: 'dr', name: 'DR', width: 'w-[90px]', sortable: true, icon: <AhrefsLogo width={30} height={20} /> },
+    { id: 'da', name: 'DA', width: 'w-[90px]', sortable: true, icon: <MozLogo width={30} height={20} /> },
+    { id: 'as', name: 'AS', width: 'w-[90px]', minWidth: 'min-w-[100px]', sortable: true, icon: <SemrushLogo width={30} height={20} /> },
+    { id: 'traffic', name: 'Traffic', width: 'w-[90px]', minWidth: 'min-w-[100px]', sortable: true, icon: <AhrefsLogo width={30} height={20} /> },
+    { id: 'keywords', name: 'Keywords', width: 'w-[90px]', minWidth: 'min-w-[100px]', sortable: true, icon: <AhrefsLogo width={30} height={20} /> },
+    { id: 'refDomains', name: 'Ref. Domains', width: 'w-[90px]', minWidth: 'min-w-[100px]', sortable: true, icon: <AhrefsLogo width={30} height={20} /> },
+    { id: 'niches', name: 'Niches', width: 'w-[90px]', minWidth: 'min-w-[150px]' },
+    { id: 'publisherNote', name: 'Publisher Note', width: 'w-[90px]', minWidth: 'min-w-[150px]' },
+    { id: 'created', name: 'Created', width: 'w-[90px]', minWidth: 'min-w-[100px]', sortable: true },
+    { id: 'actions', name: '', width: 'w-[50px]', minWidth: 'min-w-[50px]' },
+  ], []);
+
+  // Initialize visibleColumnIds after allColumns is defined
+  useEffect(() => {
+    if (visibleColumnIds.length === 0 && allColumns.length > 0) {
+      setVisibleColumnIds(allColumns.slice(0, 9).map(col => col.id));
+    }
+  }, [allColumns, visibleColumnIds.length]);
+  
+  // Define isColumnVisible function before it's used in useMemo hooks
+  const isColumnVisible = useCallback((columnId: string) => {
+    return visibleColumnIds.includes(columnId);
+  }, [visibleColumnIds]);
+  
+  // Check if the price column is visible
+  const isPriceVisible = useMemo(() => {
+    return visibleColumnIds.includes('price');
+  }, [visibleColumnIds]);
+  
+  // Calculate visible columns
+  const visibleColumns = useMemo(() => {
+    return allColumns
+      .filter(col => isColumnVisible(col.id))
+      .map(col => col.id);
+  }, [visibleColumnIds, allColumns, isColumnVisible]);
+
+  // Calculate the minimum width the table should have to ensure proper scrolling
+  const minTableWidth = useMemo(() => {
+    // Default minimum width to ensure the table doesn't shrink below a reasonable size
+    const minimumBaseWidth = 900; // Increased from 800 to better fit 9 columns
+    
+    // Calculate the sum of widths of visible columns
+    const visibleWidth = allColumns
+      .filter(col => isColumnVisible(col.id))
+      .reduce((total, col) => {
+        // Extract numeric width from tailwind class (e.g., w-[90px] -> 90)
+        const widthMatch = col.width.match(/\[(\d+)px\]/);
+        const width = widthMatch ? parseInt(widthMatch[1], 10) : 100;
+        return total + width;
+      }, 0);
+    
+    // Return the larger of calculated width or minimum base width
+    return Math.max(visibleWidth, minimumBaseWidth);
+  }, [visibleColumnIds, allColumns, isColumnVisible]);
+  
+  // Calculate the width needed for exactly 9 columns to constrain container
+  const containerMaxWidth = useMemo(() => {
+    if (allColumns.length < 9) return undefined;
+    
+    const width = allColumns
+      .slice(0, 9)
+      .reduce((total, col) => {
+        const widthMatch = col.width.match(/\[(\d+)px\]/);
+        const width = widthMatch ? parseInt(widthMatch[1], 10) : 100;
+        return total + width;
+      }, 20); // Add a small buffer for borders
+      
+    return width;
+  }, [allColumns]);
+
+  // Get classes for price column when it should be sticky
+  const getPriceColumnClass = useCallback(() => {
+    const baseClass = "px-2 py-2 whitespace-nowrap";
+    
+    // Only make it sticky if it's among the visible columns
+    if (isPriceVisible) {
+      return `${baseClass} sticky left-0 z-10 bg-white shadow-[1px_0_0_0_#e5e7eb]`;
+    }
+    
+    return baseClass;
+  }, [isPriceVisible]);
+
+  // Get classes for price header when it should be sticky
+  const getPriceHeaderClass = useCallback(() => {
+    const baseClass = "whitespace-nowrap px-2 py-0.5 text-left font-medium text-xs bg-gray-50";
+    
+    // Only make it sticky if it's among the visible columns
+    if (isPriceVisible) {
+      return `${baseClass} sticky left-0 z-10 shadow-[1px_0_0_0_#e5e7eb]`;
+    }
+    
+    return baseClass;
+  }, [isPriceVisible]);
+
+  const handleTabChange = (tab: string) => {
+    setActiveListingType(tab);
+  };
+
+  const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchTerm(e.target.value);
+  };
+
+  // Toggle a column's visibility
+  const toggleColumn = (columnId: string) => {
+    setVisibleColumnIds(prev => {
+      if (prev.includes(columnId)) {
+        return prev.filter(id => id !== columnId);
+      } else {
+        return [...prev, columnId];
+      }
+    });
+  };
+
+  // Toggle all columns
+  const toggleAllColumns = () => {
+    if (visibleColumnIds.length === allColumns.length) {
+      setVisibleColumnIds([]);
+    } else {
+      setVisibleColumnIds(allColumns.map(col => col.id));
+    }
+  };
+
+  // Calculate filtered data based on tabs and search
+  const filteredListings = useMemo(() => {
+    return mockListings.filter(listing => {
+      // Filter by listing type tab
+      const typeMatch = activeListingType === 'guest-posts' ? listing.type.listingType === 'guest-post' : 
+                      activeListingType === 'homepage-links' ? listing.type.listingType === 'homepage-link' :
+                      activeListingType === 'innerpage-links' ? listing.type.listingType === 'innerpage-link' :
+                      listing.type.listingType === 'sitewide-link';
+  
+      // Filter by search term
+      const searchMatch = searchTerm ? 
+        (listing.website.domain.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        listing.niches.some(niche => niche.toLowerCase().includes(searchTerm.toLowerCase()))) :
+        true;
+  
+      return typeMatch && searchMatch;
+    });
+  }, [activeListingType, searchTerm, mockListings]);
+
+  return (
+    <div className={`border border-gray-200 rounded-md overflow-hidden ${className}`}>
+      {/* Search bar with Column Settings */}
+      <div className="flex justify-between items-center border-b border-gray-200 px-4 py-2 bg-white">
+        <div className="flex items-center gap-2 relative" ref={columnSettingsRef}>
+          <button 
+            onClick={() => setShowColumnSettings(!showColumnSettings)}
+            className="flex items-center gap-1 text-gray-500 hover:text-gray-700 text-xs py-0.5 px-1.5 rounded hover:bg-gray-100 transition-colors"
+            aria-label="Toggle column visibility settings"
+          >
+            <Columns size={12} />
+            <span className="text-xs">Columns</span>
+          </button>
+          
+          {/* Column Settings Dropdown - Repositioned */}
+          {showColumnSettings && (
+            <div className="absolute left-0 top-full mt-1 bg-white border border-gray-200 rounded-md shadow-lg z-20 w-[260px] p-1.5">
+              <div className="border-b border-gray-200 pb-1 mb-1">
+                <div className="flex justify-between items-center mb-1">
+                  <h3 className="font-medium text-xs">Column Visibility</h3>
+                  <div className="flex gap-1">
+                    <button
+                      onClick={() => setVisibleColumnIds(allColumns.slice(0, 9).map(col => col.id))}
+                      className="text-[10px] bg-blue-50 text-blue-600 py-0.5 px-1 rounded hover:bg-blue-100"
+                    >
+                      Default (9)
+                    </button>
+                    <button
+                      onClick={toggleAllColumns}
+                      className="text-[10px] bg-gray-50 text-gray-600 py-0.5 px-1 rounded hover:bg-gray-100"
+                    >
+                      {visibleColumns.length === allColumns.length ? "Hide All" : "Show All"}
+                    </button>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="max-h-[280px] overflow-y-auto">
+                <div className="grid grid-cols-2 gap-0.5">
+                  {allColumns.map((column, index) => (
+                    <div 
+                      key={column.id}
+                      className={`flex items-center justify-between py-0.5 px-1.5 rounded cursor-pointer hover:bg-gray-50 ${index < 9 ? 'border-l-2 border-blue-300' : ''}`}
+                      onClick={() => toggleColumn(column.id)}
+                    >
+                      <span className="text-[10px] text-gray-700 flex items-center gap-1">
+                        {isColumnVisible(column.id) ? (
+                          <Eye size={10} className="text-blue-500" />
+                        ) : (
+                          <EyeOff size={10} className="text-gray-400" />
+                        )}
+                        {column.name}
+                        {index < 9 && (
+                          <span className="ml-1 text-[8px] text-blue-500">Default</span>
+                        )}
+                      </span>
+                      <div className={`w-3 h-3 rounded-sm flex items-center justify-center ${isColumnVisible(column.id) ? 'bg-blue-500' : 'border border-gray-300'}`}>
+                        {isColumnVisible(column.id) && (
+                          <Check size={8} className="text-white" />
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+        <div className="relative">
+          <input
+            type="text"
+            placeholder="Search websites or niches"
+            className="py-1 pl-2.5 pr-7 text-xs border border-gray-300 rounded-md w-56"
+            onChange={handleSearch}
+          />
+          <span className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-400">
+            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="11" cy="11" r="8"></circle>
+              <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+            </svg>
+          </span>
+        </div>
+      </div>
+      
+      {/* Listing type tabs */}
+      <div className="border-b border-gray-200 bg-white">
+        <div className="flex space-x-1 px-4 overflow-x-auto">
+          <button
+            className={`px-4 py-2.5 text-sm font-medium whitespace-nowrap ${activeListingType === 'guest-posts' ? 'border-b-2 border-green-500 text-green-600' : 'text-gray-600 hover:text-gray-800'}`}
+            onClick={() => handleTabChange('guest-posts')}
+          >
+            Guest posts
+          </button>
+          <button
+            className={`px-4 py-2.5 text-sm font-medium whitespace-nowrap ${activeListingType === 'homepage-links' ? 'border-b-2 border-green-500 text-green-600' : 'text-gray-600 hover:text-gray-800'}`}
+            onClick={() => handleTabChange('homepage-links')}
+          >
+            Homepage links
+          </button>
+          <button
+            className={`px-4 py-2.5 text-sm font-medium whitespace-nowrap ${activeListingType === 'innerpage-links' ? 'border-b-2 border-green-500 text-green-600' : 'text-gray-600 hover:text-gray-800'}`}
+            onClick={() => handleTabChange('innerpage-links')}
+          >
+            Innerpage links
+          </button>
+          <button
+            className={`px-4 py-2.5 text-sm font-medium whitespace-nowrap ${activeListingType === 'sitewide-links' ? 'border-b-2 border-green-500 text-green-600' : 'text-gray-600 hover:text-gray-800'}`}
+            onClick={() => handleTabChange('sitewide-links')}
+          >
+            Sitewide links
+          </button>
+        </div>
+      </div>
+      
+      {/* Table with horizontal scrolling */}
+      <div className="overflow-hidden bg-white">
+        <div 
+          className="w-full overflow-x-auto scroll-smooth"
+          style={{ 
+            width: '100%',
+            maxWidth: '100%',
+            overflowX: 'auto',
+            position: 'relative'
+          }}
+        >
+          <div className="relative">
+            <table 
+              className="w-full table-fixed divide-y divide-gray-200 text-sm"
+              style={{ 
+                minWidth: `${minTableWidth}px`, 
+                width: `${minTableWidth}px` 
+              }}
+            >
+              <colgroup>
+                {allColumns.map(column => (
+                  isColumnVisible(column.id) && (
+                    <col 
+                      key={column.id} 
+                      className={column.width}
+                    />
+                  )
+                ))}
+              </colgroup>
+              <thead className="bg-gray-50 text-gray-600">
+                <tr className="border-b border-gray-200">
+                  {allColumns.map(column => (
+                    isColumnVisible(column.id) && (
+                      <th 
+                        key={column.id}
+                        className={column.id === 'price' ? getPriceHeaderClass() : `whitespace-nowrap px-2 py-0.5 text-left font-medium text-xs ${column.icon ? 'text-center' : ''}`}
+                      >
+                        {column.icon ? (
+                          <div className="flex flex-col items-center justify-center">
+                            {column.icon}
+                            <div className="flex items-center justify-center mt-0">
+                              <span className="text-[10px] text-gray-600 font-medium">{column.name}</span>
+                              {column.sortable && <ArrowUpDown className="w-2 h-2 ml-0.5 text-gray-400" />}
+                            </div>
+                          </div>
+                        ) : column.id === 'actions' ? (
+                          <Columns className="w-3 h-3 mx-auto" />
+                        ) : (
+                          <div className="flex items-center justify-between">
+                            <span className="text-[11px] text-gray-600 font-medium">{column.name}</span>
+                            {column.sortable && <ArrowUpDown className="w-2.5 h-2.5 ml-1 text-gray-400" />}
+                          </div>
+                        )}
+                      </th>
+                    )
+                  ))}
+                </tr>
+              </thead>
+              <tbody className="bg-white">
+                {loading ? (
+                  <tr>
+                    <td colSpan={visibleColumns.length || 1} className="text-center py-8">
+                      <div className="flex justify-center items-center">
+                        <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-green-500"></div>
+                        <span className="ml-2 text-gray-500">Loading...</span>
+                      </div>
+                    </td>
+                  </tr>
+                ) : filteredListings.length === 0 || visibleColumns.length === 0 ? (
+                  <tr>
+                    <td colSpan={visibleColumns.length || 1} className="text-center py-8 text-gray-500">
+                      {visibleColumns.length === 0 ? "Please select at least one column to display data." : "No listings found matching your criteria."}
+                    </td>
+                  </tr>
+                ) : (
+                  filteredListings.map((listing) => (
+                    <tr key={listing.id} className="border-b border-gray-100 hover:bg-gray-50">
+                      {isColumnVisible('price') && (
+                        <td className={getPriceColumnClass()}>
+                          <div className="flex items-center">
+                            <button className="bg-green-500 text-white text-xs font-medium py-1 px-2 rounded-md mr-2">
+                              Buy
+                            </button>
+                            <span className="font-medium">{listing.price} USD</span>
+                            <Info className="w-3.5 h-3.5 text-gray-400 ml-1" />
+                          </div>
+                        </td>
+                      )}
+                      
+                      {isColumnVisible('website') && (
+                        <td className="whitespace-nowrap p-3">
+                          <div className="flex items-center">
+                            <a href="#" className="text-blue-600 hover:text-blue-800 hover:underline mr-1">
+                              {listing.website.domain}
+                            </a>
+                            {listing.website.verified && (
+                              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-blue-500">
+                                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                                <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                              </svg>
+                            )}
+                          </div>
+                        </td>
+                      )}
+                      
+                      {isColumnVisible('type') && (
+                        <td className="whitespace-nowrap p-3">
+                          <div>
+                            <div className="flex items-center">
+                              <span className="text-gray-800 font-medium">
+                                {listing.type.listingType === 'innerpage-link' && 'Innerpage link'}
+                                {listing.type.listingType === 'guest-post' && 'Guest post'}
+                                {listing.type.listingType === 'homepage-link' && 'Homepage link'}
+                                {listing.type.listingType === 'sitewide-link' && 'Sitewide link'}
+                              </span>
+                              {listing.type.permanent && <span className="ml-1 text-xs text-gray-500">Permanent</span>}
+                              {!listing.type.permanent && listing.type.months && (
+                                <span className="ml-1 text-xs text-gray-500">{listing.type.months} months</span>
+                              )}
+                            </div>
+                            
+                            <div className="flex items-center text-xs text-gray-500 mt-1">
+                              <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-1">
+                                <circle cx="12" cy="12" r="10"></circle>
+                                <polyline points="12 6 12 12 16 14"></polyline>
+                              </svg>
+                              <span className="mr-1">Approx {listing.approx.workingDays} days</span>
+                              {listing.approx.wordCount && (
+                                <>
+                                  <span className="mx-1">|</span>
+                                  <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-1">
+                                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                                    <polyline points="14 2 14 8 20 8"></polyline>
+                                    <line x1="16" y1="13" x2="8" y2="13"></line>
+                                    <line x1="16" y1="17" x2="8" y2="17"></line>
+                                    <polyline points="10 9 9 9 8 9"></polyline>
+                                  </svg>
+                                  <span>{listing.approx.wordCount} words</span>
+                                </>
+                              )}
+                            </div>
+                          </div>
+                        </td>
+                      )}
+                      
+                      {isColumnVisible('language') && (
+                        <td className="whitespace-nowrap p-3">
+                          <div className="flex flex-col">
+                            <span className="text-gray-800">{listing.language.primary}</span>
+                            <span className="text-xs text-gray-500">{listing.language.native}</span>
+                            {listing.language.extra && (
+                              <span className="text-xs text-blue-500">{listing.language.extra}</span>
+                            )}
+                          </div>
+                        </td>
+                      )}
+                      
+                      {isColumnVisible('category') && (
+                        <td className="whitespace-nowrap p-3">
+                          <span className="px-2 py-1 bg-gray-100 text-gray-700 rounded text-xs">
+                            {listing.category}
+                          </span>
+                        </td>
+                      )}
+                      
+                      {isColumnVisible('country') && (
+                        <td className="whitespace-nowrap p-3 text-center">
+                          <span className="inline-flex items-center justify-center">
+                            <span className="font-medium">{listing.metrics.countryCode}</span>
+                          </span>
+                        </td>
+                      )}
+                      
+                      {isColumnVisible('dr') && (
+                        <td className="whitespace-nowrap p-3 text-center">
+                          <div className="flex flex-col items-center">
+                            <span className="font-medium">{listing.metrics.dr.value}</span>
+                            <span className="text-xs text-green-600">{listing.metrics.dr.percentage}</span>
+                          </div>
+                        </td>
+                      )}
+                      
+                      {isColumnVisible('da') && (
+                        <td className="whitespace-nowrap p-3 text-center">
+                          <div className="flex flex-col items-center">
+                            <span className="font-medium">{listing.metrics.da}</span>
+                          </div>
+                        </td>
+                      )}
+                      
+                      {isColumnVisible('as') && (
+                        <td className="whitespace-nowrap p-3 text-center">
+                          <div className="flex flex-col items-center">
+                            <span className="font-medium">{listing.metrics.as}</span>
+                          </div>
+                        </td>
+                      )}
+                      
+                      {isColumnVisible('traffic') && (
+                        <td className="whitespace-nowrap p-3 text-center">
+                          <div className="flex items-center justify-center">
+                            <span className="font-medium">{listing.metrics.traffic.toLocaleString()}</span>
+                          </div>
+                        </td>
+                      )}
+                      
+                      {isColumnVisible('keywords') && (
+                        <td className="whitespace-nowrap p-3 text-center">
+                          <div className="flex items-center justify-center">
+                            <span className="font-medium">{listing.metrics.keywords.toLocaleString()}</span>
+                          </div>
+                        </td>
+                      )}
+                      
+                      {isColumnVisible('refDomains') && (
+                        <td className="whitespace-nowrap p-3 text-center">
+                          <div className="flex items-center justify-center">
+                            <span className="font-medium">{listing.metrics.refDomains.toLocaleString()}</span>
+                          </div>
+                        </td>
+                      )}
+                      
+                      {isColumnVisible('niches') && (
+                        <td className="p-3">
+                          <div className="flex flex-wrap gap-1">
+                            {listing.niches.map((niche, i) => (
+                              <span key={i} className="px-2 py-0.5 bg-blue-50 text-blue-700 rounded-full text-xs">
+                                {niche}
+                              </span>
+                            ))}
+                          </div>
+                        </td>
+                      )}
+                      
+                      {isColumnVisible('publisherNote') && (
+                        <td className="p-3">
+                          {listing.publisherNote && (
+                            <span className="text-xs text-gray-600">{listing.publisherNote}</span>
+                          )}
+                        </td>
+                      )}
+                      
+                      {isColumnVisible('created') && (
+                        <td className="whitespace-nowrap p-3">
+                          <span className="text-gray-600">{listing.created}</span>
+                        </td>
+                      )}
+                      
+                      {isColumnVisible('actions') && (
+                        <td className="whitespace-nowrap p-3 text-center">
+                          <button className="text-gray-400 hover:text-gray-600">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                              <circle cx="12" cy="12" r="1"></circle>
+                              <circle cx="12" cy="5" r="1"></circle>
+                              <circle cx="12" cy="19" r="1"></circle>
+                            </svg>
+                          </button>
+                        </td>
+                      )}
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+
+            {/* Scroll shadow indicator on the right */}
+            {visibleColumns.length > 9 && (
+              <div className="absolute top-0 bottom-0 right-0 w-16 pointer-events-none bg-gradient-to-l from-white to-transparent"></div>
+            )}
+          </div>
+        </div>
+      </div>
+      
+      {/* Add horizontal scroll indicator */}
+      <div className="flex justify-end items-center px-4 py-1 bg-gray-50 border-t border-gray-200 text-xs text-gray-500">
+        <span>
+          {visibleColumns.length > 9 && (
+            <>
+              <span className="mr-1">
+                Showing {Math.min(9, visibleColumns.length)} of {visibleColumns.length} columns
+              </span>
+              <span className="inline-flex items-center">
+                <ChevronRight size={12} className="ml-1" />
+                <span className="ml-1">Scroll right to see more</span>
+              </span>
+            </>
+          )}
+        </span>
+      </div>
+      
+      {/* Pagination */}
+      <div className="px-4 py-3 flex items-center justify-between border-t border-gray-200">
+        <div className="flex-1 flex justify-between sm:hidden">
+          <button
+            onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
+            disabled={currentPage === 1}
+            className="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
+          >
+            Previous
+          </button>
+          <button
+            onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
+            disabled={currentPage === totalPages}
+            className="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
+          >
+            Next
+          </button>
+        </div>
+        <div className="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
+          <div>
+            <p className="text-sm text-gray-700">
+              Showing page <span className="font-medium">{currentPage}</span> of{' '}
+              <span className="font-medium">{totalPages}</span> pages
+            </p>
+          </div>
+          <div>
+            <nav className="relative inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
+              <button
+                onClick={() => setCurrentPage(1)}
+                disabled={currentPage === 1}
+                className="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50"
+              >
+                <ChevronsLeft className="h-4 w-4" aria-hidden="true" />
+              </button>
+              <button
+                onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
+                disabled={currentPage === 1}
+                className="relative inline-flex items-center px-2 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50"
+              >
+                <ChevronLeft className="h-4 w-4" aria-hidden="true" />
+              </button>
+              {/* Page numbers */}
+              {[...Array(Math.min(5, totalPages))].map((_, i) => {
+                const pageNum = currentPage <= 3 
+                  ? i + 1 
+                  : currentPage >= totalPages - 2 
+                    ? totalPages - 4 + i 
+                    : currentPage - 2 + i;
+                
+                if (pageNum <= 0 || pageNum > totalPages) return null;
+                
+                return (
+                  <button
+                    key={pageNum}
+                    onClick={() => setCurrentPage(pageNum)}
+                    className={`relative inline-flex items-center px-4 py-2 border ${
+                      currentPage === pageNum ? 'bg-green-50 border-green-500 text-green-600 z-10' : 'border-gray-300 bg-white text-gray-500 hover:bg-gray-50'
+                    } text-sm font-medium`}
+                  >
+                    {pageNum}
+                  </button>
+                );
+              })}
+              <button
+                onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
+                disabled={currentPage === totalPages}
+                className="relative inline-flex items-center px-2 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50"
+              >
+                <ChevronRight className="h-4 w-4" aria-hidden="true" />
+              </button>
+              <button
+                onClick={() => setCurrentPage(totalPages)}
+                disabled={currentPage === totalPages}
+                className="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50"
+              >
+                <ChevronsRight className="h-4 w-4" aria-hidden="true" />
+              </button>
+            </nav>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default MarketplaceTable; 

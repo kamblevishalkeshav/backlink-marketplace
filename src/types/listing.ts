@@ -1,17 +1,68 @@
+export type ListingStatus = 'pending' | 'approved' | 'rejected';
+export type ContentWriterType = 'both' | 'you' | 'publisher';
+export type ListingType = 'guest-post' | 'homepage-link' | 'innerpage-link' | 'sitewide-link';
+export type ContentAcceptanceStatus = 'accepted' | 'not-accepted' | 'prohibited';
+
+export interface CountryTraffic {
+  countryCode: string;
+  percentage: number;
+  traffic: number;
+}
+
 export interface Listing {
-  id: number | string;
-  website: string;
-  domainAuthority: number;
-  domainRating: number;
-  traffic: string;
+  id: string;
+  price: number;
+  offerRate?: number; // Optional discount rate
+  isFavorite?: boolean;
+  website: {
+    domain: string;
+    verified: boolean;
+    tags?: string[];
+  };
+  type: {
+    listingType: ListingType;
+    permanent: boolean;
+    months?: number;
+    wordCount: number;
+    workingDays: number;
+    contentWriter: ContentWriterType;
+  };
+  approx: {
+    workingDays: number;
+    wordCount?: number;
+  };
+  language: {
+    primary: string;
+    native: string;
+    extra?: string;
+  };
   category: string;
-  price: string;
-  description: string;
-  indexing: string;
-  language: string;
-  createdAt?: string;
-  updatedAt?: string;
-  publisherId?: string;
+  metrics: {
+    countryCode: string;
+    countryTraffic?: CountryTraffic[]; // Up to 5 country traffic entries
+    dr: {
+      value: number;
+      percentage: string;
+    };
+    da: number;
+    as: number; // Authority Score
+    traffic: number;
+    keywords: number;
+    refDomains: number;
+  };
+  niches: string[];
+  acceptedContent?: {
+    casino?: ContentAcceptanceStatus;
+    finance?: ContentAcceptanceStatus;
+    erotic?: ContentAcceptanceStatus;
+    dating?: ContentAcceptanceStatus;
+    crypto?: ContentAcceptanceStatus;
+    cbd?: ContentAcceptanceStatus;
+    medicine?: ContentAcceptanceStatus;
+  };
+  publisherNote?: string;
+  status: ListingStatus;
+  createdAt: string; // ISO date
 }
 
 export type ListingFilters = {
