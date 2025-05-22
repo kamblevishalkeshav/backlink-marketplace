@@ -73,6 +73,32 @@ export default function Home() {
           {/* Hero Section */}
           <Hero />
 
+          {/* Authentication Links Section */}
+          <div className="py-8 bg-white">
+            <div className="container mx-auto max-w-[1200px] px-4">
+              <div className="flex flex-col items-center justify-center space-y-4">
+                <h2 className="text-2xl font-bold text-center">Access the Backlink Marketplace</h2>
+                <div className="flex flex-wrap gap-4 justify-center">
+                  <Link href="/login" className="px-6 py-3 bg-[#2ac37a] text-white font-medium rounded-lg hover:bg-[#25a868] transition-colors">
+                    Login
+                  </Link>
+                  <Link href="/signin" className="px-6 py-3 bg-[#47b49e] text-white font-medium rounded-lg hover:bg-[#3c9a87] transition-colors">
+                    Sign In
+                  </Link>
+                  <Link href="/register" className="px-6 py-3 bg-[#87c44d] text-white font-medium rounded-lg hover:bg-[#75ac41] transition-colors">
+                    Register
+                  </Link>
+                  <Link href="/dashboard" className="px-6 py-3 bg-gray-200 text-gray-800 font-medium rounded-lg hover:bg-gray-300 transition-colors">
+                    Dashboard
+                  </Link>
+                  <Link href="/admin/dashboard" className="px-6 py-3 bg-gray-800 text-white font-medium rounded-lg hover:bg-gray-700 transition-colors">
+                    Admin
+                  </Link>
+                </div>
+              </div>
+            </div>
+          </div>
+
           {/* Logo Carousel Section */}
           <div className="mt-8 md:mt-12">
             <LogoCarouselSection />
