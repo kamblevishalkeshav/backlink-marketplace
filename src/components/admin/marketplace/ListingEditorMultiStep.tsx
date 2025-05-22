@@ -17,7 +17,7 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { ChevronLeft, ChevronRight, Save } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
-import { FormProvider as RHFFormProvider, useForm } from 'react-hook-form';
+import { FormProvider, useForm } from 'react-hook-form';
 
 // Define the steps with their components
 const steps = [
@@ -42,9 +42,10 @@ export default function ListingEditorMultiStep({ initialData, listingId }: {
   const [progress, setProgress] = useState(0);
   const isEditMode = !!listingId;
   
-  // Initialize form for react-hook-form components
+  // Initialize form for react-hook-form components with proper nesting
   const methods = useForm({
-    defaultValues: formData
+    defaultValues: formData,
+    mode: "onChange"
   });
   
   // Update form when formData changes
@@ -72,6 +73,7 @@ export default function ListingEditorMultiStep({ initialData, listingId }: {
         try {
           const parsedData = JSON.parse(savedDraft);
           setFormData(parsedData);
+          methods.reset(parsedData);
           toast({
             title: "Draft loaded",
             description: "Your previous draft has been loaded.",
@@ -82,7 +84,7 @@ export default function ListingEditorMultiStep({ initialData, listingId }: {
         }
       }
     }
-  }, [initialData, isEditMode]);
+  }, [initialData, isEditMode, methods]);
   
   // Calculate progress based on filled fields
   useEffect(() => {
@@ -106,25 +108,41 @@ export default function ListingEditorMultiStep({ initialData, listingId }: {
   }, [formData]);
   
   const updateFormData = (newData: Partial<Omit<Listing, 'id' | 'status' | 'createdAt'>>) => {
-    setFormData(prev => ({
-      ...prev,
-      ...newData,
-    }));
+    setFormData(prev => {
+      const updated = {
+        ...prev,
+        ...newData,
+      };
+      
+      // Update the form with the new values
+      methods.reset(updated, { keepValues: true });
+      
+      return updated;
+    });
   };
   
   const handleNext = () => {
+    const currentData = methods.getValues();
+    setFormData(currentData);
+    
     if (activeStep < steps.length - 1) {
       setActiveStep(prev => prev + 1);
     }
   };
   
   const handlePrevious = () => {
+    const currentData = methods.getValues();
+    setFormData(currentData);
+    
     if (activeStep > 0) {
       setActiveStep(prev => prev - 1);
     }
   };
   
   const handleTabChange = (value: string) => {
+    const currentData = methods.getValues();
+    setFormData(currentData);
+    
     const index = steps.findIndex(step => step.id === value);
     if (index !== -1) {
       setActiveStep(index);
@@ -132,7 +150,9 @@ export default function ListingEditorMultiStep({ initialData, listingId }: {
   };
   
   const handleSaveDraft = () => {
-    localStorage.setItem('listing-draft', JSON.stringify(formData));
+    const currentData = methods.getValues();
+    setFormData(currentData);
+    localStorage.setItem('listing-draft', JSON.stringify(currentData));
     toast({
       title: "Draft saved",
       description: "Your listing draft has been saved.",
@@ -145,13 +165,15 @@ export default function ListingEditorMultiStep({ initialData, listingId }: {
     
     try {
       console.log('Starting form submission process');
-      console.log('Form data:', formData);
+      const currentData = methods.getValues();
+      setFormData(currentData);
+      console.log('Form data:', currentData);
       
       // Make an API call to create or update the listing
       const response = await fetch(isEditMode ? `/api/listings/${listingId}` : '/api/listings', {
         method: isEditMode ? 'PUT' : 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData),
+        body: JSON.stringify(currentData),
       });
       
       if (!response.ok) {
@@ -238,7 +260,7 @@ export default function ListingEditorMultiStep({ initialData, listingId }: {
           ))}
         </TabsList>
         
-        <RHFFormProvider {...methods}>
+        <FormProvider {...methods}>
           <AnimatePresence mode="wait">
             <motion.div
               key={activeStep}
@@ -256,7 +278,7 @@ export default function ListingEditorMultiStep({ initialData, listingId }: {
               </Card>
             </motion.div>
           </AnimatePresence>
-        </RHFFormProvider>
+        </FormProvider>
       </Tabs>
       
       {/* Navigation buttons */}

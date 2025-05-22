@@ -65,7 +65,7 @@ export default function ContentSection({ formData, updateFormData, control }: Co
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <FormField
             control={control}
-            name="wordCount"
+            name="type.wordCount"
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Word Count</FormLabel>
@@ -85,7 +85,7 @@ export default function ContentSection({ formData, updateFormData, control }: Co
 
           <FormField
             control={control}
-            name="workingDays"
+            name="type.workingDays"
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Delivery Time (days)</FormLabel>
@@ -105,7 +105,7 @@ export default function ContentSection({ formData, updateFormData, control }: Co
           
           <FormField
             control={control}
-            name="contentWriter"
+            name="type.contentWriter"
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Content Writer</FormLabel>
@@ -119,9 +119,9 @@ export default function ContentSection({ formData, updateFormData, control }: Co
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
-                    <SelectItem value="BOTH">Both options available</SelectItem>
-                    <SelectItem value="YOU">Buyer provides content</SelectItem>
-                    <SelectItem value="PUBLISHER">Publisher writes content</SelectItem>
+                    <SelectItem value="both">Both options available</SelectItem>
+                    <SelectItem value="buyer">Buyer provides content</SelectItem>
+                    <SelectItem value="publisher">Publisher writes content</SelectItem>
                   </SelectContent>
                 </Select>
                 <FormMessage />
@@ -131,7 +131,7 @@ export default function ContentSection({ formData, updateFormData, control }: Co
         
           <FormField
             control={control}
-            name="primaryLanguage"
+            name="language.primary"
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Primary Language</FormLabel>
@@ -164,7 +164,7 @@ export default function ContentSection({ formData, updateFormData, control }: Co
           
           <FormField
             control={control}
-            name="nativeLanguage"
+            name="language.native"
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Native Language</FormLabel>
@@ -197,7 +197,7 @@ export default function ContentSection({ formData, updateFormData, control }: Co
           
           <FormField
             control={control}
-            name="extraLanguage"
+            name="language.extra"
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Extra Language (Optional)</FormLabel>
@@ -243,13 +243,13 @@ export default function ContentSection({ formData, updateFormData, control }: Co
                   <FormItem className="flex flex-row items-start space-x-3 space-y-0 bg-muted/50 p-3 rounded-md">
                     <FormControl>
                       <Checkbox
-                        checked={field.value === 'ACCEPTED'}
+                        checked={field.value === 'accepted'}
                         onCheckedChange={(checked) => {
-                          field.onChange(checked ? 'ACCEPTED' : 'NOT_ACCEPTED');
+                          field.onChange(checked ? 'accepted' : 'not-accepted');
                         }}
                       />
                     </FormControl>
-                    <div className="space-y-1 leading-none">
+                    <div className="grid gap-1.5 leading-none">
                       <FormLabel className="capitalize">{niche}</FormLabel>
                     </div>
                   </FormItem>
