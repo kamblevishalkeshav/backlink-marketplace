@@ -2,18 +2,18 @@
 
 import { Button } from '@/components/ui/button';
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle
+    Card,
+    CardContent,
+    CardDescription,
+    CardHeader,
+    CardTitle
 } from '@/components/ui/card';
 import {
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage
+    FormControl,
+    FormField,
+    FormItem,
+    FormLabel,
+    FormMessage
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Trash2 } from 'lucide-react';
@@ -55,7 +55,7 @@ const TrafficSection = ({
             <div key={index} className="grid grid-cols-1 md:grid-cols-4 gap-4 items-end pb-4 border-b">
               <FormField
                 control={control}
-                name={`countryTraffic.${index}.countryCode`}
+                name={`metrics.countryTraffic.${index}.countryCode`}
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Country {index + 1}</FormLabel>
@@ -75,7 +75,7 @@ const TrafficSection = ({
               
               <FormField
                 control={control}
-                name={`countryTraffic.${index}.percentage`}
+                name={`metrics.countryTraffic.${index}.percentage`}
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Traffic Percentage</FormLabel>
@@ -98,7 +98,7 @@ const TrafficSection = ({
               
               <FormField
                 control={control}
-                name={`countryTraffic.${index}.traffic`}
+                name={`metrics.countryTraffic.${index}.traffic`}
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Monthly Traffic</FormLabel>

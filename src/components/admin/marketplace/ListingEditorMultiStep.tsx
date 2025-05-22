@@ -227,8 +227,6 @@ export default function ListingEditorMultiStep({ initialData, listingId }: {
     }
   };
   
-  const CurrentStepComponent = steps[activeStep].component;
-  
   return (
     <div className="space-y-8">
       {/* Progress indicator */}
@@ -270,11 +268,126 @@ export default function ListingEditorMultiStep({ initialData, listingId }: {
               transition={{ duration: 0.2 }}
             >
               <Card className="p-6">
-                <CurrentStepComponent 
-                  formData={formData} 
-                  updateFormData={updateFormData}
-                  control={methods.control}
-                />
+                {activeStep === 0 && (
+                  <BasicInfoSection 
+                    formData={formData} 
+                    updateFormData={updateFormData}
+                    control={methods.control}
+                  />
+                )}
+                
+                {activeStep === 1 && (
+                  <ContentSection 
+                    formData={formData} 
+                    updateFormData={updateFormData}
+                    control={methods.control}
+                  />
+                )}
+                
+                {activeStep === 2 && (
+                  <MetricsSection 
+                    formData={formData} 
+                    updateFormData={updateFormData}
+                    control={methods.control}
+                  />
+                )}
+                
+                {activeStep === 3 && (
+                  <TrafficSection 
+                    control={methods.control}
+                    countryTraffic={formData.metrics.countryTraffic || []}
+                    onAddCountry={() => {
+                      // Get current form data
+                      const currentData = methods.getValues();
+                      const currentTraffic = [...(currentData.metrics?.countryTraffic || [])];
+                      
+                      // Add a new country
+                      currentTraffic.push({
+                        countryCode: '',
+                        percentage: 0,
+                        traffic: 0
+                      });
+                      
+                      // Update form data
+                      updateFormData({
+                        metrics: {
+                          ...currentData.metrics,
+                          countryTraffic: currentTraffic
+                        }
+                      });
+                    }}
+                    onRemoveCountry={(index) => {
+                      const currentData = methods.getValues();
+                      const currentTraffic = [...(currentData.metrics?.countryTraffic || [])];
+                      
+                      if (currentTraffic.length > 1) {
+                        currentTraffic.splice(index, 1);
+                        
+                        updateFormData({
+                          metrics: {
+                            ...currentData.metrics,
+                            countryTraffic: currentTraffic
+                          }
+                        });
+                      }
+                    }}
+                    onCountryChange={(index, country) => {
+                      const currentData = methods.getValues();
+                      const currentTraffic = [...(currentData.metrics?.countryTraffic || [])];
+                      
+                      if (currentTraffic[index]) {
+                        currentTraffic[index].countryCode = country;
+                        
+                        updateFormData({
+                          metrics: {
+                            ...currentData.metrics,
+                            countryTraffic: currentTraffic
+                          }
+                        });
+                      }
+                    }}
+                  />
+                )}
+                
+                {activeStep === 4 && (
+                  <NichesSection 
+                    control={methods.control}
+                    niches={formData.niches || []}
+                    onAddNiche={(niche) => {
+                      const currentData = methods.getValues();
+                      const currentNiches = [...(currentData.niches || [])];
+                      
+                      if (!currentNiches.includes(niche)) {
+                        currentNiches.push(niche);
+                        
+                        updateFormData({
+                          niches: currentNiches
+                        });
+                      }
+                    }}
+                    onRemoveNiche={(niche) => {
+                      const currentData = methods.getValues();
+                      const currentNiches = [...(currentData.niches || [])];
+                      
+                      const index = currentNiches.indexOf(niche);
+                      if (index !== -1) {
+                        currentNiches.splice(index, 1);
+                        
+                        updateFormData({
+                          niches: currentNiches
+                        });
+                      }
+                    }}
+                  />
+                )}
+                
+                {activeStep === 5 && (
+                  <SubmitSection 
+                    formData={formData} 
+                    updateFormData={updateFormData}
+                    control={methods.control}
+                  />
+                )}
               </Card>
             </motion.div>
           </AnimatePresence>
