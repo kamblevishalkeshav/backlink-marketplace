@@ -32,8 +32,8 @@ const nextConfig = {
   // Improve handling of Prisma in serverless environments
   webpack: (config, { isServer }) => {
     if (isServer) {
-      // Ensure Prisma client is transpiled
-      config.externals = [...config.externals, 'prisma', '@prisma/client'];
+      // Ensure Prisma is handled correctly
+      config.externals.push('_http_common');
     }
     return config;
   },
@@ -76,7 +76,27 @@ const nextConfig = {
         permanent: true,
       }
     ]
-  }
+  },
+  async rewrites() {
+    return [
+      {
+        source: '/login',
+        destination: '/login',
+      },
+      {
+        source: '/register',
+        destination: '/register',
+      },
+      {
+        source: '/signin',
+        destination: '/signin',
+      },
+      {
+        source: '/test-page',
+        destination: '/test-page',
+      },
+    ];
+  },
 };
 
 export default nextConfig; 
