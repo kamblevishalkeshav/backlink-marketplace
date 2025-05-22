@@ -377,32 +377,41 @@ export default function ListingEditorMultiStep({ initialData, listingId }: {
       
       // Transform the form data to match the API's expected structure
       const apiData = {
-        domain: formData.website?.domain || '',
-        price: formData.price || 0,
-        offerRate: formData.offerRate || null,
-        tags: formData.website?.tags || [],
-        // Ensure listingType is in the correct format
-        listingType: formData.type?.listingType?.toUpperCase() || 'GUEST_POST',
-        permanent: Boolean(formData.type?.permanent),
-        months: formData.type?.permanent ? null : (formData.type?.months || 1),
-        wordCount: formData.type?.wordCount || 500,
-        workingDays: formData.type?.workingDays || 3,
-        // Ensure contentWriter is in the correct format
-        contentWriter: formData.type?.contentWriter?.toUpperCase() || 'BOTH',
-        primaryLanguage: formData.language?.primary || 'English',
-        nativeLanguage: formData.language?.native || formData.language?.primary || 'English',
-        extraLanguage: formData.language?.extra || null,
+        price: formData.price,
+        offerRate: formData.offerRate || 0,
+        website: {
+          domain: formData.website?.domain || '',
+          verified: formData.website?.verified || false,
+          tags: formData.website?.tags || []
+        },
+        type: {
+          listingType: formData.type?.listingType || 'guest-post',
+          permanent: Boolean(formData.type?.permanent),
+          months: formData.type?.permanent ? null : (formData.type?.months || 1),
+          wordCount: formData.type?.wordCount || 500,
+          workingDays: formData.type?.workingDays || 3,
+          contentWriter: formData.type?.contentWriter || 'BOTH'
+        },
+        language: {
+          primary: formData.language?.primary || 'English',
+          native: formData.language?.native || formData.language?.primary || 'English',
+          extra: formData.language?.extra || null
+        },
         category: formData.category || 'General',
-        countryCode: formData.metrics?.countryCode || 'US',
-        da: formData.metrics?.da || 0,
-        drValue: formData.metrics?.dr?.value || 0,
-        drPercentage: formData.metrics?.dr?.percentage || '+0%',
-        as: formData.metrics?.as || 0,
-        traffic: formData.traffic?.monthly || formData.metrics?.traffic || 0,
-        keywords: formData.metrics?.keywords || 0,
-        refDomains: formData.metrics?.refDomains || 0,
+        metrics: {
+          countryCode: formData.metrics?.countryCode || 'US',
+          countryTraffic: Array.isArray(formData.metrics?.countryTraffic) ? formData.metrics.countryTraffic : [],
+          dr: {
+            value: formData.metrics?.dr?.value || 0,
+            percentage: formData.metrics?.dr?.percentage || '+0%'
+          },
+          da: formData.metrics?.da || 0,
+          as: formData.metrics?.as || 0,
+          traffic: formData.traffic?.monthly || formData.metrics?.traffic || 0,
+          keywords: formData.metrics?.keywords || 0,
+          refDomains: formData.metrics?.refDomains || 0
+        },
         niches: Array.isArray(formData.niches) ? formData.niches : [],
-        publisherNote: formData.publisherNote || '',
         acceptedContent: formData.acceptedContent || {
           casino: 'NOT_ACCEPTED',
           finance: 'NOT_ACCEPTED',
@@ -412,7 +421,7 @@ export default function ListingEditorMultiStep({ initialData, listingId }: {
           cbd: 'NOT_ACCEPTED',
           medicine: 'NOT_ACCEPTED'
         },
-        countryTraffic: Array.isArray(formData.metrics?.countryTraffic) ? formData.metrics.countryTraffic : []
+        publisherNote: formData.publisherNote || ''
       };
 
       console.log('Submitting formatted data to API:', apiData);

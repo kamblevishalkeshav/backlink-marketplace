@@ -208,75 +208,43 @@ export async function POST(request: NextRequest) {
     console.log('Received data:', JSON.stringify(data));
     
     // Validate required fields
-    if (!data.domain) {
-      console.error('Missing required field: domain');
+    if (!data.website?.domain) {
+      console.error('Missing required field: website.domain');
       return NextResponse.json(
-        { error: 'Domain is required' },
+        { error: 'Website domain is required' },
         { status: 400 }
       );
     }
     
-    // Extract and format data
-    const {
-      domain,
-      price,
-      offerRate,
-      listingType,
-      permanent,
-      months,
-      wordCount,
-      workingDays,
-      contentWriter,
-      primaryLanguage,
-      nativeLanguage,
-      extraLanguage,
-      category,
-      countryCode,
-      da,
-      drValue,
-      drPercentage,
-      as,
-      traffic,
-      keywords,
-      refDomains,
-      niches,
-      publisherNote,
-      acceptedContent,
-      countryTraffic,
-      tags = [],
-    } = data;
-    
-    console.log('Extracted fields successfully');
-    
     try {
-      // Create the listing
-      console.log('Attempting to create listing in database for domain:', domain);
+      // Create the listing from the nested data structure
+      console.log('Attempting to create listing in database for domain:', data.website.domain);
       const listing = await prisma.listing.create({
         data: {
-          domain,
-          price: parseFloat(price) || 0,
-          offerRate: offerRate ? parseFloat(offerRate) : null,
-          tags: Array.isArray(tags) ? tags : [],
-          listingType: listingType || 'GUEST_POST',
-          permanent: Boolean(permanent),
-          months: permanent ? null : parseInt(months) || null,
-          wordCount: parseInt(wordCount) || 0,
-          workingDays: parseInt(workingDays) || 1,
-          contentWriter: contentWriter || 'BOTH',
-          primaryLanguage: primaryLanguage || 'English',
-          nativeLanguage: nativeLanguage || primaryLanguage || 'English',
-          extraLanguage,
-          category: category || 'General',
-          countryCode: countryCode || 'US',
-          da: parseInt(da) || 0,
-          drValue: parseInt(drValue) || 0,
-          drPercentage: drPercentage || '',
-          as: parseInt(as) || 0,
-          traffic: parseInt(traffic) || 0,
-          keywords: parseInt(keywords) || 0,
-          refDomains: parseInt(refDomains) || 0,
-          niches: Array.isArray(niches) ? niches : [],
-          publisherNote,
+          domain: data.website.domain,
+          price: parseFloat(data.price) || 0,
+          offerRate: data.offerRate ? parseFloat(data.offerRate) : null,
+          tags: Array.isArray(data.website.tags) ? data.website.tags : [],
+          listingType: data.type.listingType.toUpperCase(),
+          permanent: Boolean(data.type.permanent),
+          months: data.type.permanent ? null : parseInt(data.type.months) || null,
+          wordCount: parseInt(data.type.wordCount) || 0,
+          workingDays: parseInt(data.type.workingDays) || 1,
+          contentWriter: data.type.contentWriter.toUpperCase(),
+          primaryLanguage: data.language.primary,
+          nativeLanguage: data.language.native || data.language.primary,
+          extraLanguage: data.language.extra,
+          category: data.category || 'General',
+          countryCode: data.metrics.countryCode || 'US',
+          da: parseInt(data.metrics.da) || 0,
+          drValue: parseInt(data.metrics.dr.value) || 0,
+          drPercentage: data.metrics.dr.percentage || '',
+          as: parseInt(data.metrics.as) || 0,
+          traffic: parseInt(data.metrics.traffic) || 0,
+          keywords: parseInt(data.metrics.keywords) || 0,
+          refDomains: parseInt(data.metrics.refDomains) || 0,
+          niches: Array.isArray(data.niches) ? data.niches : [],
+          publisherNote: data.publisherNote,
           status: 'PENDING', // All new listings are pending review by default
           createdById: session.user?.id,
           verified: false,
@@ -284,20 +252,20 @@ export async function POST(request: NextRequest) {
           // Create the accepted content object
           acceptedContent: {
             create: {
-              casino: acceptedContent?.casino || 'NOT_ACCEPTED',
-              finance: acceptedContent?.finance || 'NOT_ACCEPTED',
-              erotic: acceptedContent?.erotic || 'NOT_ACCEPTED',
-              dating: acceptedContent?.dating || 'NOT_ACCEPTED',
-              crypto: acceptedContent?.crypto || 'NOT_ACCEPTED',
-              cbd: acceptedContent?.cbd || 'NOT_ACCEPTED',
-              medicine: acceptedContent?.medicine || 'NOT_ACCEPTED',
+              casino: data.acceptedContent?.casino || 'NOT_ACCEPTED',
+              finance: data.acceptedContent?.finance || 'NOT_ACCEPTED',
+              erotic: data.acceptedContent?.erotic || 'NOT_ACCEPTED',
+              dating: data.acceptedContent?.dating || 'NOT_ACCEPTED',
+              crypto: data.acceptedContent?.crypto || 'NOT_ACCEPTED',
+              cbd: data.acceptedContent?.cbd || 'NOT_ACCEPTED',
+              medicine: data.acceptedContent?.medicine || 'NOT_ACCEPTED',
             }
           },
           
           // Create country traffic data
           countryTraffic: {
-            create: Array.isArray(countryTraffic) && countryTraffic.length > 0
-              ? countryTraffic
+            create: Array.isArray(data.metrics.countryTraffic) && data.metrics.countryTraffic.length > 0
+              ? data.metrics.countryTraffic
                   .filter((item: any) => item.countryCode && item.percentage)
                   .map((item: any) => ({
                     countryCode: item.countryCode,
