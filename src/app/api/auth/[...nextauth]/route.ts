@@ -2,7 +2,7 @@ import type { NextAuthOptions } from 'next-auth';
 import NextAuth from 'next-auth';
 import CredentialsProvider from 'next-auth/providers/credentials';
 
-// Mock user for demonstration
+// Mock users for demonstration
 const mockUsers = [
   {
     id: '1',
@@ -10,7 +10,7 @@ const mockUsers = [
     email: 'user@example.com',
     // In a real app, this would be hashed
     password: 'password123',
-    role: 'customer',
+    role: 'USER',
   },
   {
     id: '2',
@@ -18,7 +18,15 @@ const mockUsers = [
     email: 'publisher@example.com',
     // In a real app, this would be hashed
     password: 'password123',
-    role: 'publisher',
+    role: 'USER',
+  },
+  {
+    id: 'admin-user-123',
+    name: 'Admin User',
+    email: 'admin@example.com',
+    // In a real app, this would be hashed
+    password: 'admin123',
+    role: 'ADMIN',
   },
 ];
 

@@ -1,8 +1,15 @@
 'use client';
 
-import ListingEditorMultiStep from '@/components/admin/marketplace/ListingEditorMultiStep';
 import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbSeparator } from '@/components/ui/breadcrumb';
 import { ChevronRight, Plus } from 'lucide-react';
+import dynamic from 'next/dynamic';
+import { Suspense } from 'react';
+
+// Load the editor component on the client side only
+const ListingEditorMultiStep = dynamic(
+  () => import('@/components/admin/marketplace/ListingEditorMultiStep'),
+  { ssr: false }
+);
 
 export default function CreateListingPage() {
   return (
@@ -38,7 +45,9 @@ export default function CreateListingPage() {
         </h1>
       </div>
       
-      <ListingEditorMultiStep />
+      <Suspense fallback={<div>Loading editor...</div>}>
+        <ListingEditorMultiStep />
+      </Suspense>
     </div>
   );
 } 

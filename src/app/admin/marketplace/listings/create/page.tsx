@@ -1,11 +1,17 @@
 'use client';
 
-import ListingEditor from '@/components/admin/marketplace/ListingEditor';
 import { Button } from '@/components/ui/button';
 import { motion } from 'framer-motion';
 import { ArrowLeft, Save } from 'lucide-react';
+import dynamic from 'next/dynamic';
 import { useRouter } from 'next/navigation';
-import { useState } from 'react';
+import { Suspense, useState } from 'react';
+
+// Dynamic import for client-only rendering
+const ListingEditor = dynamic(
+  () => import('@/components/admin/marketplace/ListingEditor'),
+  { ssr: false }
+);
 
 export default function CreateListingPage() {
   const router = useRouter();
@@ -60,7 +66,9 @@ export default function CreateListingPage() {
       </motion.div>
 
       <div className="bg-white rounded-xl shadow-xl border border-gray-100 overflow-hidden">
-        <ListingEditor />
+        <Suspense fallback={<div className="p-8">Loading editor...</div>}>
+          <ListingEditor />
+        </Suspense>
       </div>
     </div>
   );

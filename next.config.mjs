@@ -95,6 +95,10 @@ const nextConfig = {
         source: '/test-page',
         destination: '/test-page',
       },
+      {
+        source: '/test-simple',
+        destination: '/test-simple',
+      },
     ];
   },
 };

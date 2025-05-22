@@ -27,7 +27,8 @@ import {
     SlidersHorizontal,
     Star,
     Trash2,
-    TrendingUp
+    TrendingUp,
+    Upload
 } from 'lucide-react';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
@@ -469,12 +470,20 @@ export default function AdminMarketplacePage() {
       
       <div className="flex items-center justify-between mb-8">
         <h1 className="text-3xl font-bold text-gray-900">Marketplace Listings</h1>
-        <Link href="/admin/marketplace/create">
-          <Button className="bg-indigo-600 hover:bg-indigo-700 text-white">
-            <Plus className="h-4 w-4 mr-2" />
-            New Listing
-          </Button>
-        </Link>
+        <div className="flex gap-2">
+          <Link href="/admin/marketplace/import">
+            <Button variant="outline" className="flex items-center">
+              <Upload className="h-4 w-4 mr-2" />
+              Import Listings
+            </Button>
+          </Link>
+          <Link href="/admin/marketplace/create">
+            <Button className="bg-indigo-600 hover:bg-indigo-700 text-white">
+              <Plus className="h-4 w-4 mr-2" />
+              New Listing
+            </Button>
+          </Link>
+        </div>
       </div>
       
       {/* Stats Dashboard */}

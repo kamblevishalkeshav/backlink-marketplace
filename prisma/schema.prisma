@@ -1,36 +1,25 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
   provider        = "prisma-client-js"
   previewFeatures = ["driverAdapters"]
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
-  // Direct connection for better performance in serverless environments
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
   directUrl = env("DIRECT_URL")
 }
 
-// Define your models below
 model User {
-  id        String    @id @default(cuid())
-  email     String    @unique
+  id        String     @id @default(cuid())
+  email     String     @unique
   name      String?
-  role      Role      @default(USER)
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
-  pages     Page[]
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+  role      Role       @default(USER)
   listings  Listing[]
-}
-
-enum Role {
-  USER
-  ADMIN
+  pages     Page[]
+  blogPosts BlogPost[]
+  orders    Order[]    // User can have multiple orders
 }
 
 model Profile {
@@ -41,29 +30,162 @@ model Profile {
   updatedAt DateTime @updatedAt
 }
 
-// Website Content Models
 model Page {
   id          String        @id @default(cuid())
   title       String
   slug        String        @unique
+  content     String?       @db.Text  // Full page content
   isPublished Boolean       @default(false)
+  metaTitle   String?
+  metaDesc    String?
+  publishedAt DateTime?
   createdAt   DateTime      @default(now())
   updatedAt   DateTime      @updatedAt
-  sections    PageSection[]
-  createdBy   User?         @relation(fields: [createdById], references: [id])
   createdById String?
+  createdBy   User?         @relation(fields: [createdById], references: [id])
+  sections    PageSection[]
 }
 
 model PageSection {
-  id          String           @id @default(cuid())
+  id        String      @id @default(cuid())
+  name      String
+  type      SectionType
+  order     Int
+  content   Json
+  pageId    String
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
+  page      Page        @relation(fields: [pageId], references: [id], onDelete: Cascade)
+}
+
+model Asset {
+  id        String    @id @default(cuid())
+  name      String
+  url       String
+  type      AssetType
+  size      Int
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+}
+
+model Listing {
+  id              String            @id @default(cuid())
+  price           Float
+  offerRate       Float?
+  domain          String
+  verified        Boolean           @default(false)
+  tags            String[]
+  listingType     ListingType
+  permanent       Boolean
+  months          Int?
+  wordCount       Int
+  workingDays     Int
+  contentWriter   ContentWriterType
+  primaryLanguage String
+  nativeLanguage  String
+  extraLanguage   String?
+  category        String
+  countryCode     String
+  da              Int
+  drValue         Int
+  drPercentage    String
+  as              Int
+  traffic         Int
+  keywords        Int
+  refDomains      Int
+  niches          String[]
+  publisherNote   String?
+  status          ListingStatus     @default(PENDING)
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+  createdById     String?
+  acceptedContent AcceptedContent?
+  countryTraffic  CountryTraffic[]
+  createdBy       User?             @relation(fields: [createdById], references: [id])
+  orders          Order[]           // A listing can have multiple orders
+}
+
+model CountryTraffic {
+  id          String  @id @default(cuid())
+  countryCode String
+  percentage  Int
+  traffic     Int?
+  listingId   String
+  listing     Listing @relation(fields: [listingId], references: [id], onDelete: Cascade)
+}
+
+model AcceptedContent {
+  id        String                   @id @default(cuid())
+  casino    ContentAcceptanceStatus? @default(NOT_ACCEPTED)
+  finance   ContentAcceptanceStatus? @default(NOT_ACCEPTED)
+  erotic    ContentAcceptanceStatus? @default(NOT_ACCEPTED)
+  dating    ContentAcceptanceStatus? @default(NOT_ACCEPTED)
+  crypto    ContentAcceptanceStatus? @default(NOT_ACCEPTED)
+  cbd       ContentAcceptanceStatus? @default(NOT_ACCEPTED)
+  medicine  ContentAcceptanceStatus? @default(NOT_ACCEPTED)
+  listingId String                   @unique
+  listing   Listing                  @relation(fields: [listingId], references: [id], onDelete: Cascade)
+}
+
+// Blog post model for content management
+model BlogPost {
+  id            String      @id @default(cuid())
+  title         String
+  slug          String      @unique
+  content       String      @db.Text
+  excerpt       String?
+  featuredImage String?
+  published     Boolean     @default(false)
+  publishedAt   DateTime?
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+  authorId      String
+  author        User        @relation(fields: [authorId], references: [id])
+  categories    Category[]  // Many-to-many relationship with categories
+}
+
+// Category model for blog and listings organization
+model Category {
+  id          String     @id @default(cuid())
   name        String
-  type        SectionType
-  order       Int
-  content     Json
-  page        Page             @relation(fields: [pageId], references: [id], onDelete: Cascade)
-  pageId      String
-  createdAt   DateTime         @default(now())
-  updatedAt   DateTime         @updatedAt
+  slug        String     @unique
+  description String?
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+  blogPosts   BlogPost[] // Many-to-many relationship with blog posts
+}
+
+// Order model for tracking purchases
+model Order {
+  id            String      @id @default(cuid())
+  status        OrderStatus @default(PENDING)
+  amount        Float
+  paymentMethod String?
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+  userId        String      // Buyer ID
+  user          User        @relation(fields: [userId], references: [id])
+  listingId     String      // The listing being purchased
+  listing       Listing     @relation(fields: [listingId], references: [id])
+}
+
+// Menu model for site navigation
+model MenuItem {
+  id          String      @id @default(cuid())
+  title       String
+  url         String
+  parentId    String?
+  parent      MenuItem?   @relation("MenuItemToMenuItem", fields: [parentId], references: [id])
+  children    MenuItem[]  @relation("MenuItemToMenuItem")
+  position    Int
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+}
+
+enum Role {
+  USER
+  ADMIN
+  PUBLISHER
 }
 
 enum SectionType {
@@ -79,23 +201,12 @@ enum SectionType {
   CUSTOM
 }
 
-model Asset {
-  id        String   @id @default(cuid())
-  name      String
-  url       String
-  type      AssetType
-  size      Int
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-}
-
 enum AssetType {
   IMAGE
   VIDEO
   DOCUMENT
 }
 
-// Listing Models
 enum ListingStatus {
   PENDING
   APPROVED
@@ -113,6 +224,7 @@ enum ContentWriterType {
   BOTH
   YOU
   PUBLISHER
+  BUYER
 }
 
 enum ContentAcceptanceStatus {
@@ -121,60 +233,10 @@ enum ContentAcceptanceStatus {
   PROHIBITED
 }
 
-model Listing {
-  id           String       @id @default(cuid())
-  price        Float
-  offerRate    Float?
-  domain       String
-  verified     Boolean      @default(false)
-  tags         String[]
-  listingType  ListingType
-  permanent    Boolean
-  months       Int?
-  wordCount    Int
-  workingDays  Int
-  contentWriter ContentWriterType
-  primaryLanguage String
-  nativeLanguage  String
-  extraLanguage   String?
-  category     String
-  countryCode  String
-  da           Int
-  drValue      Int
-  drPercentage String
-  as           Int
-  traffic      Int
-  keywords     Int
-  refDomains   Int
-  niches       String[]
-  publisherNote String?
-  status       ListingStatus @default(PENDING)
-  createdAt    DateTime      @default(now())
-  updatedAt    DateTime      @updatedAt
-  createdBy    User?         @relation(fields: [createdById], references: [id])
-  createdById  String?
-  countryTraffic CountryTraffic[]
-  acceptedContent AcceptedContent?
-}
-
-model CountryTraffic {
-  id           String   @id @default(cuid())
-  countryCode  String
-  percentage   Int
-  traffic      Int?
-  listing      Listing  @relation(fields: [listingId], references: [id], onDelete: Cascade)
-  listingId    String
-}
-
-model AcceptedContent {
-  id           String                 @id @default(cuid())
-  casino       ContentAcceptanceStatus? @default(NOT_ACCEPTED)
-  finance      ContentAcceptanceStatus? @default(NOT_ACCEPTED)
-  erotic       ContentAcceptanceStatus? @default(NOT_ACCEPTED)
-  dating       ContentAcceptanceStatus? @default(NOT_ACCEPTED)
-  crypto       ContentAcceptanceStatus? @default(NOT_ACCEPTED)
-  cbd          ContentAcceptanceStatus? @default(NOT_ACCEPTED)
-  medicine     ContentAcceptanceStatus? @default(NOT_ACCEPTED)
-  listing      Listing                @relation(fields: [listingId], references: [id], onDelete: Cascade)
-  listingId    String                 @unique
+enum OrderStatus {
+  PENDING
+  PAID
+  COMPLETED
+  CANCELLED
+  REFUNDED
 }

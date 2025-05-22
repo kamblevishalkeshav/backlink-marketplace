@@ -1,12 +1,12 @@
 export type ListingStatus = 'pending' | 'approved' | 'rejected';
-export type ContentWriterType = 'both' | 'you' | 'publisher';
+export type ContentWriterType = 'buyer' | 'publisher' | 'both' | 'you';
 export type ListingType = 'guest-post' | 'homepage-link' | 'innerpage-link' | 'sitewide-link';
 export type ContentAcceptanceStatus = 'accepted' | 'not-accepted' | 'prohibited';
 
 export interface CountryTraffic {
   countryCode: string;
   percentage: number;
-  traffic: number;
+  traffic?: number;
 }
 
 export interface Listing {
@@ -14,6 +14,7 @@ export interface Listing {
   price: number;
   offerRate?: number; // Optional discount rate
   isFavorite?: boolean;
+  description?: string; // Site description
   website: {
     domain: string;
     verified: boolean;
@@ -49,6 +50,11 @@ export interface Listing {
     traffic: number;
     keywords: number;
     refDomains: number;
+  };
+  traffic?: {
+    monthly: number;
+    organic?: number;
+    paid?: number;
   };
   niches: string[];
   acceptedContent?: {

@@ -7,7 +7,8 @@
     { "source": "/login", "destination": "/login" },
     { "source": "/register", "destination": "/register" },
     { "source": "/signin", "destination": "/signin" },
-    { "source": "/test-page", "destination": "/test-page" }
+    { "source": "/test-page", "destination": "/test-page" },
+    { "source": "/test-simple", "destination": "/test-simple" }
   ],
   "headers": [
     {
