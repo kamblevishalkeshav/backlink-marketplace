@@ -3,27 +3,21 @@
 import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Label } from '@/components/ui/label';
+import { FormControl, FormField, FormItem, FormLabel } from '@/components/ui/form';
 import { Switch } from '@/components/ui/switch';
 import { Listing } from '@/types/listing';
 import { AlertCircle, CheckCircle, DollarSign, Globe, LinkIcon, TagIcon } from 'lucide-react';
-import { useState } from 'react';
+import { Control } from 'react-hook-form';
 
 interface SubmitSectionProps {
   formData: Omit<Listing, 'id' | 'status' | 'createdAt'>;
   updateFormData: (data: Partial<Omit<Listing, 'id' | 'status' | 'createdAt'>>) => void;
+  control: Control<Partial<Omit<Listing, 'id' | 'status' | 'createdAt'>>>;
 }
 
-export default function SubmitSection({ formData, updateFormData }: SubmitSectionProps) {
-  const [termsAccepted, setTermsAccepted] = useState(false);
-  
+export default function SubmitSection({ formData, updateFormData, control }: SubmitSectionProps) {
   // Calculate estimated monthly revenue
   const estimatedRevenue = Math.round(formData.price * 0.7); // 70% of listing price goes to publisher
-  
-  const handleTermsChange = (checked: boolean) => {
-    setTermsAccepted(checked);
-    updateFormData({ termsAccepted: checked });
-  };
   
   const getStatusColor = (value: number, max: number) => {
     const percentage = (value / max) * 100;
@@ -93,7 +87,7 @@ export default function SubmitSection({ formData, updateFormData }: SubmitSectio
             <div>
               <h4 className="text-sm font-medium text-gray-500 mb-1">Content Writer</h4>
               <p className="font-medium capitalize">
-                {formData.type.contentWriter === 'you' 
+                {formData.type.contentWriter === 'buyer' 
                   ? 'Buyer provides' 
                   : formData.type.contentWriter === 'publisher' 
                     ? 'Publisher writes' 
@@ -209,33 +203,49 @@ export default function SubmitSection({ formData, updateFormData }: SubmitSectio
             </div>
             
             <div className="space-y-4 mt-4">
-              <div className="flex items-start space-x-2">
-                <Checkbox 
-                  id="terms" 
-                  checked={termsAccepted}
-                  onCheckedChange={handleTermsChange}
-                />
-                <div className="grid gap-1.5 leading-none">
-                  <Label
-                    htmlFor="terms"
-                    className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                  >
-                    I agree to the <a href="#" className="text-indigo-600 hover:underline">Terms & Conditions</a> and <a href="#" className="text-indigo-600 hover:underline">Privacy Policy</a>
-                  </Label>
-                  <p className="text-sm text-gray-500">
-                    By submitting, you confirm all information is accurate and meets our quality standards.
-                  </p>
-                </div>
-              </div>
+              <FormField
+                control={control}
+                name="termsAccepted"
+                render={({ field }) => (
+                  <FormItem className="flex flex-row items-start space-x-2">
+                    <FormControl>
+                      <Checkbox 
+                        id="terms"
+                        checked={field.value as boolean}
+                        onCheckedChange={field.onChange}
+                      />
+                    </FormControl>
+                    <div className="grid gap-1.5 leading-none">
+                      <FormLabel
+                        htmlFor="terms"
+                        className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                      >
+                        I agree to the <a href="#" className="text-indigo-600 hover:underline">Terms & Conditions</a> and <a href="#" className="text-indigo-600 hover:underline">Privacy Policy</a>
+                      </FormLabel>
+                      <p className="text-sm text-gray-500">
+                        By submitting, you confirm all information is accurate and meets our quality standards.
+                      </p>
+                    </div>
+                  </FormItem>
+                )}
+              />
               
-              <div className="flex items-center space-x-2">
-                <Switch 
-                  id="notifications"
-                  checked={formData.notificationsEnabled || false}
-                  onCheckedChange={(checked) => updateFormData({ notificationsEnabled: checked })}
-                />
-                <Label htmlFor="notifications">Receive email notifications for this listing</Label>
-              </div>
+              <FormField
+                control={control}
+                name="notificationsEnabled"
+                render={({ field }) => (
+                  <FormItem className="flex flex-row items-center space-x-2">
+                    <FormControl>
+                      <Switch 
+                        id="notifications"
+                        checked={field.value as boolean}
+                        onCheckedChange={field.onChange}
+                      />
+                    </FormControl>
+                    <FormLabel htmlFor="notifications">Receive email notifications for this listing</FormLabel>
+                  </FormItem>
+                )}
+              />
             </div>
           </Card>
         </div>

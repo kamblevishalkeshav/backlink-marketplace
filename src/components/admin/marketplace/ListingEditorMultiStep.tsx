@@ -352,7 +352,6 @@ export default function ListingEditorMultiStep({ initialData, listingId }: {
                 {activeStep === 4 && (
                   <NichesSection 
                     control={methods.control}
-                    niches={formData.niches || []}
                     onAddNiche={(niche) => {
                       const currentData = methods.getValues();
                       const currentNiches = [...(currentData.niches || [])];
@@ -360,9 +359,13 @@ export default function ListingEditorMultiStep({ initialData, listingId }: {
                       if (!currentNiches.includes(niche)) {
                         currentNiches.push(niche);
                         
+                        // Update form data
                         updateFormData({
                           niches: currentNiches
                         });
+                        
+                        // Also update form fields directly
+                        methods.setValue('niches', currentNiches);
                       }
                     }}
                     onRemoveNiche={(niche) => {
@@ -373,9 +376,13 @@ export default function ListingEditorMultiStep({ initialData, listingId }: {
                       if (index !== -1) {
                         currentNiches.splice(index, 1);
                         
+                        // Update form data
                         updateFormData({
                           niches: currentNiches
                         });
+                        
+                        // Also update form fields directly
+                        methods.setValue('niches', currentNiches);
                       }
                     }}
                   />
